@@ -1,0 +1,810 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Play Bots | Chess Tutor</title>
+    <style>
+        :root {
+            --bg: #050806;
+            --panel: rgba(5, 24, 10, 0.94);
+            --panel-soft: rgba(8, 30, 13, 0.82);
+            --text: #f3f6ef;
+            --muted: #bdc8ba;
+            --green: #52e262;
+            --green-bright: #63f06f;
+            --line: rgba(84, 255, 122, 0.16);
+            --light-square: #eeeed2;
+            --dark-square: #769656;
+            --board-size: min(calc(100vh - 245px), calc(100vw - 430px), 940px);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 70% 18%, rgba(58, 220, 88, 0.2), transparent 34%),
+                radial-gradient(circle at 18% 76%, rgba(58, 220, 88, 0.09), transparent 32%),
+                #050806;
+            color: var(--text);
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .play-page {
+            height: 100vh;
+            overflow: hidden;
+            padding: 18px 42px 22px;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(84, 255, 122, 0.14);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 26px;
+            font-weight: 900;
+            color: #ffffff;
+        }
+
+        .logo-mark {
+            width: 38px;
+            height: 38px;
+            display: grid;
+            place-items: center;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #7cff82, #1f8f45);
+            color: rgba(231, 255, 226, 0.34);
+            font-size: 25px;
+            box-shadow: 0 0 28px rgba(84, 255, 122, 0.45);
+        }
+
+        .logo span {
+            color: #52e262;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 36px;
+            color: #c8d0c4;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .nav-links a {
+            position: relative;
+            padding: 8px 0;
+        }
+
+        .nav-links a:hover,
+        .nav-links .active {
+            color: #63f06f;
+        }
+
+        .nav-links .active::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -14px;
+            height: 3px;
+            background: #53e35f;
+            box-shadow: 0 0 18px rgba(83, 227, 95, 0.8);
+        }
+
+        .auth-links {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+        }
+
+        .auth-user {
+            color: #ffffff;
+            font-weight: 800;
+        }
+
+        .profile-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-avatar {
+            width: 34px;
+            height: 34px;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #7cff82, #1f8f45);
+            color: rgba(231, 255, 226, 0.34);
+            font-size: 0.82rem;
+            font-weight: 900;
+            box-shadow: 0 0 18px rgba(84, 255, 122, 0.32);
+        }
+
+        .nav-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .auth-button {
+            padding: 10px 18px;
+            border: 1px solid rgba(99, 240, 111, 0.45);
+            border-radius: 6px;
+            color: #63f06f;
+            font-weight: 800;
+            background: rgba(99, 240, 111, 0.08);
+        }
+
+        .play-shell {
+            max-width: 1520px;
+            margin: 0 auto;
+            padding-top: 22px;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 360px;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .board-column {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .board-top {
+            width: var(--board-size);
+            max-width: 100%;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+        }
+
+        .player-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar,
+        .bot-avatar {
+            display: grid;
+            place-items: center;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #7cff82, #1f8f45);
+            color: rgba(231, 255, 226, 0.34);
+            font-weight: 900;
+            box-shadow: 0 0 28px rgba(84, 255, 122, 0.3);
+        }
+
+        .avatar {
+            width: 48px;
+            height: 48px;
+            overflow: hidden;
+        }
+
+        .avatar.image {
+            background: #101410;
+            border: 1px solid rgba(99, 240, 111, 0.24);
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .player-name {
+            margin: 0;
+            font-size: clamp(1rem, 1.8vw, 1.35rem);
+            font-weight: 900;
+        }
+
+        .player-meta {
+            margin: 2px 0 0;
+            color: var(--muted);
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .board-tags {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .tag {
+            min-height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 14px;
+            border: 1px solid rgba(99, 240, 111, 0.35);
+            border-radius: 999px;
+            background: rgba(99, 240, 111, 0.08);
+            color: var(--green-bright);
+            font-size: 0.8rem;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .board-frame {
+            width: var(--board-size);
+            max-width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: linear-gradient(145deg, rgba(5, 24, 10, 0.95), rgba(2, 10, 6, 0.97));
+            border: 1px solid rgba(99, 240, 111, 0.34);
+            box-shadow:
+                0 32px 80px rgba(0, 0, 0, 0.48),
+                0 0 48px rgba(82, 226, 98, 0.18);
+        }
+
+        .board {
+            width: 100%;
+            aspect-ratio: 1;
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            overflow: hidden;
+            border-radius: 6px;
+            box-shadow:
+                inset 0 0 0 1px rgba(0, 0, 0, 0.42),
+                0 16px 36px rgba(0, 0, 0, 0.35);
+        }
+
+        .square {
+            position: relative;
+            display: grid;
+            place-items: center;
+            min-width: 0;
+            min-height: 0;
+        }
+
+        .square.light {
+            background: var(--light-square);
+        }
+
+        .square.dark {
+            background: var(--dark-square);
+        }
+
+        .piece {
+            width: 88%;
+            height: 88%;
+            object-fit: contain;
+            filter: drop-shadow(0 7px 6px rgba(0, 0, 0, 0.28));
+            user-select: none;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .coord {
+            position: absolute;
+            z-index: 3;
+            font-size: clamp(0.7rem, 1.2vw, 1rem);
+            line-height: 1;
+            font-weight: 900;
+            color: rgba(79, 129, 58, 0.98);
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .rank-label {
+            top: 8px;
+            left: 8px;
+        }
+
+        .file-label {
+            right: 8px;
+            bottom: 8px;
+        }
+
+        .selection-note {
+            width: var(--board-size);
+            max-width: 100%;
+            margin-top: 8px;
+            padding: 9px 13px;
+            border-radius: 8px;
+            background: linear-gradient(145deg, rgba(6, 24, 10, 0.92), rgba(2, 10, 6, 0.94));
+            border: 1px solid rgba(99, 240, 111, 0.22);
+            border-left: 3px solid #63f06f;
+            color: #e8ece2;
+            font-size: 0.86rem;
+            font-weight: 800;
+            line-height: 1.3;
+        }
+
+        .bot-panel {
+            height: calc(100vh - 126px);
+            min-height: 0;
+            max-height: calc(100vh - 126px);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-radius: 8px;
+            background: linear-gradient(145deg, rgba(5, 24, 10, 0.94), rgba(2, 10, 6, 0.96));
+            border: 1px solid rgba(99, 240, 111, 0.28);
+            box-shadow:
+                0 28px 70px rgba(0, 0, 0, 0.42),
+                0 0 42px rgba(82, 226, 98, 0.12);
+        }
+
+        .panel-header {
+            padding: 18px 22px;
+            background: rgba(1, 8, 4, 0.72);
+            border-bottom: 1px solid var(--line);
+        }
+
+        .panel-kicker {
+            margin: 0 0 6px;
+            color: var(--green-bright);
+            font-size: 0.78rem;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .panel-title {
+            margin: 0;
+            font-size: clamp(1.75rem, 3vw, 2.15rem);
+            font-weight: 900;
+        }
+
+        .selected-bot {
+            padding: 16px 22px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .bot-speech {
+            display: grid;
+            grid-template-columns: 54px minmax(0, 1fr);
+            gap: 14px;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .bot-avatar {
+            width: 54px;
+            height: 54px;
+            overflow: hidden;
+            flex: 0 0 auto;
+        }
+
+        .bot-avatar.image {
+            background: #101410;
+            border: 1px solid rgba(99, 240, 111, 0.24);
+            box-shadow: 0 0 24px rgba(84, 255, 122, 0.18);
+        }
+
+        .bot-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .speech-bubble {
+            position: relative;
+            padding: 14px 16px;
+            border-radius: 8px;
+            background: rgba(99, 240, 111, 0.1);
+            border: 1px solid rgba(99, 240, 111, 0.22);
+            color: #edf6ea;
+            font-size: 1rem;
+            line-height: 1.35;
+            font-weight: 800;
+        }
+
+        .speech-bubble::before {
+            content: "";
+            position: absolute;
+            left: -8px;
+            top: 20px;
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+            border-right: 8px solid rgba(99, 240, 111, 0.22);
+        }
+
+        .selected-name-row,
+        .panel-stat-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+        }
+
+        .selected-name {
+            margin: 0;
+            font-size: 1.45rem;
+            font-weight: 900;
+        }
+
+        .selected-elo {
+            color: var(--muted);
+            font-weight: 900;
+        }
+
+        .panel-stat-row {
+            margin-top: 14px;
+            padding: 12px 0 0;
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+            font-size: 0.95rem;
+            font-weight: 800;
+        }
+
+        .panel-stat-row strong {
+            color: var(--text);
+        }
+
+        .bot-list {
+            flex: 1;
+            min-height: 0;
+            padding: 12px 18px;
+            display: grid;
+            gap: 10px;
+            overflow: auto;
+            align-content: start;
+            scrollbar-gutter: stable;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(99, 240, 111, 0.92) rgba(5, 24, 10, 0.82);
+        }
+
+        .bot-list::-webkit-scrollbar {
+            width: 9px;
+        }
+
+        .bot-list::-webkit-scrollbar-track {
+            background: rgba(5, 24, 10, 0.82);
+            border-radius: 999px;
+        }
+
+        .bot-list::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #63f06f, #238c3f);
+            border: 2px solid rgba(5, 24, 10, 0.82);
+            border-radius: 999px;
+        }
+
+        .bot-list::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #83ff8d, #31ba53);
+        }
+
+        .bot-card {
+            position: relative;
+            display: grid;
+            grid-template-columns: 54px minmax(0, 1fr) auto;
+            gap: 14px;
+            align-items: center;
+            padding: 12px;
+            border-radius: 8px;
+            background: var(--panel-soft);
+            border: 1px solid rgba(99, 240, 111, 0.1);
+            transition: 0.2s ease;
+        }
+
+        a.bot-card:hover {
+            border-color: rgba(136, 244, 108, 0.55);
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px rgba(118, 185, 71, 0.16);
+        }
+
+        .bot-card.active {
+            border-color: rgba(136, 244, 108, 0.55);
+            box-shadow: 0 0 0 1px rgba(136, 244, 108, 0.12), 0 0 30px rgba(118, 185, 71, 0.16);
+        }
+
+        .bot-card.locked {
+            opacity: 0.54;
+            cursor: not-allowed;
+        }
+
+        .bot-name {
+            margin: 0 0 4px;
+            font-size: 1.02rem;
+            font-weight: 900;
+        }
+
+        .bot-meta {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.85rem;
+            font-weight: 800;
+            line-height: 1.35;
+        }
+
+        .bot-status {
+            min-width: 78px;
+            padding: 8px 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--muted);
+            text-align: center;
+            font-size: 0.72rem;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .bot-card.active .bot-status {
+            background: rgba(118, 185, 71, 0.18);
+            color: var(--green-bright);
+        }
+
+        .panel-actions {
+            margin-top: auto;
+            padding: 14px 18px;
+            border-top: 1px solid var(--line);
+            background: rgba(1, 8, 4, 0.55);
+        }
+
+        .start-button {
+            width: 100%;
+            min-height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #6df36f, #2fb84b);
+            color: #051006;
+            font-size: 1.12rem;
+            font-weight: 900;
+            box-shadow: 0 0 28px rgba(82, 226, 98, 0.34);
+        }
+
+        .engine-note {
+            margin: 12px 0 0;
+            color: var(--muted);
+            font-size: 0.85rem;
+            line-height: 1.45;
+            font-weight: 700;
+        }
+
+        @media (max-width: 1120px) {
+            body {
+                overflow: auto;
+            }
+
+            .play-page {
+                height: auto;
+                min-height: 100vh;
+                overflow: visible;
+            }
+
+            :root {
+                --board-size: min(72vh, 100%);
+            }
+
+            .play-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .board-top,
+            .board-frame,
+            .selection-note {
+                width: 100%;
+            }
+
+            .bot-panel {
+                height: auto;
+                max-height: none;
+                min-height: auto;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .play-page {
+                padding: 18px;
+            }
+
+            .navbar {
+                align-items: flex-start;
+                gap: 22px;
+                flex-direction: column;
+            }
+
+            .nav-links {
+                width: 100%;
+                gap: 18px;
+                overflow-x: auto;
+                padding-bottom: 4px;
+            }
+
+            .auth-links {
+                width: 100%;
+            }
+
+            .board-top,
+            .selected-name-row {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .board-tags {
+                justify-content: flex-start;
+            }
+
+            .bot-card {
+                grid-template-columns: 48px minmax(0, 1fr);
+            }
+
+            .bot-status {
+                grid-column: 2;
+                justify-self: start;
+            }
+        }
+
+
+        /* Keep the site mark consistent across every page. */
+        .logo-mark,
+        .brand-mark {
+            color: rgba(231, 255, 226, 0.34) !important;
+            text-shadow: 0 0 10px rgba(240, 255, 236, 0.18);
+        }
+
+        .nav-avatar {
+            color: #061107;
+        }
+    </style>
+</head>
+<body>
+    <main class="play-page">
+                <!-- Shared navbar gives the play screen the same identity as the homepage. -->
+<nav class="navbar">
+            <a href="{% url 'home' %}" class="logo">
+                <span class="logo-mark">♞</span>
+                Chess <span>Tutor</span>
+            </a>
+
+            <div class="nav-links">
+                <a href="{% url 'play' %}" class="active">Play</a>
+                <a href="{% url 'tutors' %}">Tutors</a>
+                <a href="{% url 'puzzles' %}">Puzzles</a>
+                <a href="{% url 'dashboard' %}">Dashboard</a>
+            </div>
+
+            <div class="auth-links">
+                <span class="profile-link">
+                    <span class="nav-avatar">
+                        {% if account_profile.avatar %}
+                            <img src="{{ account_profile.avatar.url }}" alt="{{ request.user.username }} profile picture">
+                        {% else %}
+                            {{ request.user.username|slice:":2"|upper }}
+                        {% endif %}
+                    </span>
+                    <span class="auth-user">{{ request.user.username }}</span>
+                </span>
+                <a href="{% url 'account_settings' %}" class="auth-button">Settings</a>
+            </div>
+        </nav>
+
+        <div class="play-shell">
+            <section class="board-column" aria-label="Chess board">
+                <div class="board-top">
+                    <div class="player-card">
+                        <div class="avatar {% if account_profile.avatar %}image{% endif %}">
+                            {% if account_profile.avatar %}
+                                <img src="{{ account_profile.avatar.url }}" alt="{{ request.user.username }} profile picture">
+                            {% else %}
+                                {{ request.user.username|slice:":2"|upper }}
+                            {% endif %}
+                        </div>
+                        <div>
+                            <h1 class="player-name">{{ request.user.username }}</h1>
+                            <p class="player-meta">{{ player_elo }} ELO - {{ bots_defeated }}/{{ total_bots }} bots defeated</p>
+                        </div>
+                    </div>
+
+                    <div class="board-tags">
+                        <span class="tag">Reach {{ selected_bot.elo }} ELO</span>
+                    </div>
+                </div>
+
+                <div class="board-frame">
+                    {% include 'main/partials/starting_board.html' %}
+                </div>
+
+                <div class="selection-note">
+                    Choose an unlocked bot level first. Beating a bot sets your ELO to that bot's rating.
+                </div>
+            </section>
+
+            <aside class="bot-panel" aria-label="Bot ladder">
+                <div class="panel-header">
+                    <p class="panel-kicker">Play section</p>
+                    <h2 class="panel-title">Bot Ladder</h2>
+                </div>
+
+                <div class="selected-bot">
+                    <div class="bot-speech">
+                        <div class="bot-avatar {% if selected_bot.avatar %}image{% endif %}">
+                            {% if selected_bot.avatar %}
+                                <img src="{% static selected_bot.avatar %}" alt="{{ selected_bot.name }}">
+                            {% else %}
+                                {{ selected_bot.number }}
+                            {% endif %}
+                        </div>
+                        <div class="speech-bubble">{{ selected_bot.intro }}</div>
+                    </div>
+
+                    <div class="selected-name-row">
+                        <h3 class="selected-name">{{ selected_bot.name }}</h3>
+                        <span class="selected-elo">{{ selected_bot.elo }} ELO</span>
+                    </div>
+
+                    <div class="panel-stat-row">
+                        <span>Current goal</span>
+                        <strong>{{ selected_bot.level }}</strong>
+                    </div>
+                </div>
+
+                <div class="bot-list">
+                    {% for bot in bots %}
+                        {% if bot.unlocked %}
+                            <a href="{% url 'bot_theme' bot.slug %}" class="bot-card {% if bot.active %}active{% endif %}">
+                                <div class="bot-avatar {% if bot.avatar %}image{% endif %}">
+                                    {% if bot.avatar %}
+                                        <img src="{% static bot.avatar %}" alt="{{ bot.name }}">
+                                    {% else %}
+                                        {{ bot.number }}
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <h3 class="bot-name">{{ bot.name }}</h3>
+                                    <p class="bot-meta">{{ bot.level }} - {{ bot.elo }} ELO</p>
+                                    <p class="bot-meta">{{ bot.description }}</p>
+                                </div>
+                                <span class="bot-status">{{ bot.status }}</span>
+                            </a>
+                        {% else %}
+                            <article class="bot-card locked">
+                                <div class="bot-avatar {% if bot.avatar %}image{% endif %}">
+                                    {% if bot.avatar %}
+                                        <img src="{% static bot.avatar %}" alt="{{ bot.name }}">
+                                    {% else %}
+                                        {{ bot.number }}
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <h3 class="bot-name">{{ bot.name }}</h3>
+                                    <p class="bot-meta">{{ bot.level }} - {{ bot.elo }} ELO</p>
+                                    <p class="bot-meta">{{ bot.description }}</p>
+                                </div>
+                                <span class="bot-status">{{ bot.status }}</span>
+                            </article>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                <div class="panel-actions">
+                    <a href="{% url 'bot_theme' selected_bot.slug %}" class="start-button">Choose Theme</a>
+                    <p class="engine-note">Start at 0 ELO. Beating this level sets your ELO to {{ selected_bot.elo }} and unlocks the next bot.</p>
+                </div>
+            </aside>
+        </div>
+    </main>
+</body>
+</html>

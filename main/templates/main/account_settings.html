@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings | Chess Tutor</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at 74% 18%, rgba(58, 220, 88, 0.18), transparent 34%),
+                radial-gradient(circle at 18% 78%, rgba(58, 220, 88, 0.08), transparent 32%),
+                #050806;
+            color: #f4f7f2;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .page {
+            min-height: 100vh;
+            padding: 18px 42px 42px;
+        }
+
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(84, 255, 122, 0.14);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #ffffff;
+            font-size: 26px;
+            font-weight: 900;
+        }
+
+        .logo-mark {
+            width: 38px;
+            height: 38px;
+            display: grid;
+            place-items: center;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #7cff82, #1f8f45);
+            color: rgba(231, 255, 226, 0.34);
+            font-size: 25px;
+            box-shadow: 0 0 28px rgba(84, 255, 122, 0.45);
+        }
+
+        .logo span {
+            color: #52e262;
+        }
+
+        .back-link {
+            color: #63f06f;
+            font-weight: 900;
+        }
+
+        .settings-shell {
+            max-width: 1080px;
+            margin: 0 auto;
+            padding-top: 54px;
+        }
+
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: end;
+            gap: 28px;
+            margin-bottom: 26px;
+        }
+
+        .kicker {
+            margin: 0 0 8px;
+            color: #63f06f;
+            font-size: 0.78rem;
+            font-weight: 900;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(2.6rem, 5vw, 5rem);
+            line-height: 0.95;
+            font-weight: 900;
+        }
+
+        h1 span {
+            color: #52e262;
+            text-shadow: 0 0 34px rgba(82, 226, 98, 0.42);
+        }
+
+        .profile-preview {
+            min-width: 260px;
+            padding: 16px;
+            border: 1px solid rgba(99, 240, 111, 0.24);
+            border-radius: 10px;
+            background: rgba(5, 24, 10, 0.72);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .profile-avatar {
+            width: 70px;
+            height: 70px;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #7cff82, #1f8f45);
+            color: rgba(231, 255, 226, 0.34);
+            font-size: 1.5rem;
+            font-weight: 900;
+            box-shadow: 0 0 28px rgba(84, 255, 122, 0.3);
+        }
+
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-preview h2,
+        .panel h2 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 900;
+        }
+
+        .profile-preview p {
+            margin: 4px 0 0;
+            color: #aeb8aa;
+            font-weight: 800;
+        }
+
+        .message-list {
+            margin: 0 0 18px;
+            padding: 0;
+            list-style: none;
+        }
+
+        .message-list li {
+            margin-bottom: 10px;
+            padding: 12px 14px;
+            border-left: 3px solid #63f06f;
+            background: rgba(99, 240, 111, 0.09);
+            color: #eaf4e8;
+            font-weight: 800;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+            gap: 22px;
+        }
+
+        .panel {
+            padding: 24px;
+            border: 1px solid rgba(99, 240, 111, 0.28);
+            border-radius: 10px;
+            background: linear-gradient(145deg, rgba(5, 24, 10, 0.94), rgba(2, 10, 6, 0.96));
+            box-shadow:
+                0 28px 70px rgba(0, 0, 0, 0.42),
+                0 0 42px rgba(82, 226, 98, 0.12);
+        }
+
+        .panel p {
+            margin: 8px 0 22px;
+            color: #aeb8aa;
+            line-height: 1.5;
+            font-weight: 700;
+        }
+
+        .field {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #dfe8dc;
+            font-size: 0.9rem;
+            font-weight: 900;
+        }
+
+        input {
+            width: 100%;
+            min-height: 48px;
+            padding: 10px 14px;
+            border: 1px solid rgba(99, 240, 111, 0.24);
+            border-radius: 6px;
+            outline: none;
+            background: rgba(3, 14, 7, 0.9);
+            color: #ffffff;
+            font: inherit;
+        }
+
+        input[type="file"] {
+            padding: 12px;
+            cursor: pointer;
+        }
+
+        input:focus {
+            border-color: rgba(99, 240, 111, 0.7);
+            box-shadow: 0 0 0 3px rgba(99, 240, 111, 0.12);
+        }
+
+        .helptext,
+        .field ul {
+            margin: 8px 0 0;
+            padding-left: 18px;
+            color: #8f9a8b;
+            font-size: 0.8rem;
+            line-height: 1.45;
+        }
+
+        .field-error {
+            margin-top: 8px;
+            color: #ff8f8f;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        .button,
+        .logout-button {
+            min-height: 50px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 18px;
+            border: 0;
+            border-radius: 6px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #6df36f, #2fb84b);
+            color: #051006;
+            font: inherit;
+            font-weight: 900;
+            box-shadow: 0 0 28px rgba(82, 226, 98, 0.28);
+        }
+
+        .logout-button {
+            width: 100%;
+            border: 1px solid rgba(255, 112, 112, 0.42);
+            background: rgba(255, 112, 112, 0.08);
+            color: #ff8f8f;
+            box-shadow: none;
+        }
+
+        .danger-panel {
+            margin-top: 22px;
+        }
+
+        @media (max-width: 900px) {
+            .page {
+                padding: 22px;
+            }
+
+            .settings-header,
+            .navbar {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .settings-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+
+        /* Keep the site mark consistent across every page. */
+        .logo-mark,
+        .brand-mark {
+            color: rgba(231, 255, 226, 0.34) !important;
+            text-shadow: 0 0 10px rgba(240, 255, 236, 0.18);
+        }
+
+        .nav-avatar {
+            color: #061107;
+        }
+    </style>
+</head>
+<body>
+    <main class="page">
+        <nav class="navbar">
+            <a href="{% url 'home' %}" class="logo">
+                <span class="logo-mark">♞</span>
+                Chess <span>Tutor</span>
+            </a>
+
+            <a href="{% url 'play' %}" class="back-link">Back to Play</a>
+        </nav>
+
+        <section class="settings-shell">
+            <div class="settings-header">
+                <div>
+                    <p class="kicker">Account</p>
+                    <h1>{{ request.user.username }}<br><span>Settings.</span></h1>
+                </div>
+
+                <div class="profile-preview">
+                    <div class="profile-avatar">
+                        {% if profile.avatar %}
+                            <img src="{{ profile.avatar.url }}" alt="{{ request.user.username }} profile picture">
+                        {% else %}
+                            {{ request.user.username|slice:":2"|upper }}
+                        {% endif %}
+                    </div>
+                    <div>
+                        <h2>{{ request.user.username }}</h2>
+                        <p>{{ request.user.email }}</p>
+                    </div>
+                </div>
+            </div>
+
+            {% if messages %}
+                <ul class="message-list">
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            <div class="settings-grid">
+                <div>
+                    <section class="panel">
+                        <h2>Profile Picture</h2>
+                        <p>Use a simple image that will show beside your name around Chess Tutor.</p>
+
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <input type="hidden" name="form_type" value="avatar">
+
+                            <div class="field">
+                                {{ avatar_form.avatar.label_tag }}
+                                {{ avatar_form.avatar }}
+                                {% if avatar_form.avatar.help_text %}
+                                    <div class="helptext">{{ avatar_form.avatar.help_text }}</div>
+                                {% endif %}
+                                {% for error in avatar_form.avatar.errors %}
+                                    <div class="field-error">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <button type="submit" class="button">Save Picture</button>
+                        </form>
+                    </section>
+
+                    <section class="panel danger-panel">
+                        <h2>Logout</h2>
+                        <p>Sign out of this Chess Tutor account on this device.</p>
+                        <a href="{% url 'logout' %}" class="logout-button">Logout</a>
+                    </section>
+                </div>
+
+                <section class="panel">
+                    <h2>Change Password</h2>
+                    <p>Update your password while staying logged in.</p>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="form_type" value="password">
+
+                        {% for field in password_form %}
+                            <div class="field">
+                                {{ field.label_tag }}
+                                {{ field }}
+                                {% if field.help_text %}
+                                    <div class="helptext">{{ field.help_text }}</div>
+                                {% endif %}
+                                {% for error in field.errors %}
+                                    <div class="field-error">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+
+                        <button type="submit" class="button">Update Password</button>
+                    </form>
+                </section>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

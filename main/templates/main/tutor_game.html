@@ -1,0 +1,4543 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ tutor.name }} Tutor | Chess Tutor</title>
+    <style>
+        :root {
+            --bg: #050806;
+            --panel: rgba(5, 24, 10, 0.94);
+            --panel-soft: rgba(8, 30, 13, 0.82);
+            --text: #f3f6ef;
+            --muted: #bdc8ba;
+            --green: #52e262;
+            --green-bright: #63f06f;
+            --line: rgba(84, 255, 122, 0.16);
+            --light-square: #eeeed2;
+            --dark-square: #769656;
+            --warning: #ffd166;
+            --danger: #ff7070;
+            --board-size: min(calc(100vh - 205px), calc(100vw - 660px), 790px);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 62% 18%, rgba(58, 220, 88, 0.18), transparent 34%),
+                radial-gradient(circle at 12% 82%, rgba(58, 220, 88, 0.08), transparent 32%),
+                #050806;
+            color: var(--text);
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .game-page {
+            height: 100vh;
+            overflow: hidden;
+            padding: 18px 42px 12px;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(84, 255, 122, 0.14);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 26px;
+            font-weight: 900;
+        }
+
+        .logo-mark,
+        .avatar,
+        .tutor-avatar {
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #7cff82, #1f8f45);
+            color: rgba(231, 255, 226, 0.34);
+            font-weight: 900;
+            box-shadow: 0 0 28px rgba(84, 255, 122, 0.35);
+        }
+
+        .logo-mark {
+            width: 38px;
+            height: 38px;
+            font-size: 25px;
+        }
+
+        .logo span {
+            color: var(--green);
+        }
+
+        .nav-links,
+        .auth-links,
+        .profile-link {
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-links {
+            gap: 36px;
+            color: #c8d0c4;
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .nav-links a {
+            position: relative;
+            padding: 8px 0;
+        }
+
+        .nav-links a:hover,
+        .nav-links .active {
+            color: var(--green-bright);
+        }
+
+        .nav-links .active::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -14px;
+            height: 3px;
+            background: #53e35f;
+            box-shadow: 0 0 18px rgba(83, 227, 95, 0.8);
+        }
+
+        .auth-links {
+            gap: 14px;
+        }
+
+        .profile-link {
+            gap: 10px;
+        }
+
+        .auth-user {
+            color: #ffffff;
+            font-weight: 800;
+        }
+
+        .nav-avatar {
+            width: 34px;
+            height: 34px;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #7cff82, #1f8f45);
+            color: rgba(231, 255, 226, 0.34);
+            font-size: 0.82rem;
+            font-weight: 900;
+            box-shadow: 0 0 18px rgba(84, 255, 122, 0.32);
+        }
+
+        .nav-avatar img,
+        .avatar img,
+        .tutor-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .auth-button {
+            padding: 10px 18px;
+            border: 1px solid rgba(99, 240, 111, 0.45);
+            border-radius: 6px;
+            color: var(--green-bright);
+            font-weight: 800;
+            background: rgba(99, 240, 111, 0.08);
+        }
+
+        .game-shell {
+            max-width: 1680px;
+            height: calc(100vh - 66px);
+            margin: 0 auto;
+            padding-top: 10px;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(500px, 540px);
+            gap: 18px;
+            align-items: start;
+        }
+
+        .board-column {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .match-top,
+        .player-strip,
+        .feedback-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+        }
+
+        .match-top,
+        .bottom-player,
+        .board-area {
+            width: var(--board-size);
+            max-width: 100%;
+        }
+
+        .match-top {
+            margin-bottom: 7px;
+        }
+
+        .player-strip {
+            justify-content: flex-start;
+        }
+
+        .avatar,
+        .tutor-avatar {
+            width: 44px;
+            height: 44px;
+            border: 1px solid rgba(99, 240, 111, 0.22);
+            background: #101410;
+        }
+
+        .player-name {
+            margin: 0;
+            font-size: 1.05rem;
+            font-weight: 900;
+        }
+
+        .player-meta {
+            margin: 2px 0 0;
+            color: var(--muted);
+            font-size: 0.8rem;
+            font-weight: 800;
+        }
+
+        .captured-row {
+            min-height: 18px;
+            margin-top: 3px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .captured-row img {
+            width: 16px;
+            height: 16px;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.34));
+            margin-left: -5px;
+        }
+
+        .captured-row img:first-child {
+            margin-left: 0;
+        }
+
+        .capture-score {
+            margin-left: 8px;
+            color: var(--muted);
+            font-size: 0.92rem;
+            font-weight: 900;
+        }
+
+        .move-pill {
+            min-height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 14px;
+            border: 1px solid rgba(99, 240, 111, 0.35);
+            border-radius: 999px;
+            background: rgba(99, 240, 111, 0.08);
+            color: var(--green-bright);
+            font-size: 0.82rem;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .match-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .opening-button {
+            min-height: 40px;
+            padding: 0 14px;
+            border: 1px solid rgba(99, 240, 111, 0.38);
+            border-radius: 999px;
+            background: rgba(99, 240, 111, 0.08);
+            color: #edf6ea;
+            font: inherit;
+            font-size: 0.78rem;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 0 18px rgba(82, 226, 98, 0.1);
+        }
+
+        .opening-button:hover {
+            color: rgba(231, 255, 226, 0.34);
+            background: linear-gradient(135deg, #72ff7c, #31c953);
+            box-shadow: 0 0 26px rgba(99, 240, 111, 0.28);
+        }
+
+        .board-area {
+            position: relative;
+        }
+
+        .eval-rail {
+            position: absolute;
+            top: 8px;
+            bottom: 8px;
+            left: -30px;
+            width: 18px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: #1b1f1b;
+            border: 1px solid rgba(99, 240, 111, 0.28);
+            box-shadow: 0 0 18px rgba(82, 226, 98, 0.12);
+        }
+
+        .eval-white {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 50%;
+            background: #f3f6ef;
+            transition: height 240ms ease;
+        }
+
+        .eval-tag {
+            position: absolute;
+            left: -54px;
+            top: -28px;
+            min-width: 72px;
+            padding: 5px 8px;
+            border-radius: 999px;
+            background: rgba(5, 24, 10, 0.92);
+            border: 1px solid rgba(99, 240, 111, 0.26);
+            color: var(--green-bright);
+            font-size: 0.72rem;
+            font-weight: 900;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .board-frame {
+            width: 100%;
+            padding: 8px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: linear-gradient(145deg, rgba(5, 24, 10, 0.95), rgba(2, 10, 6, 0.97));
+            border: 1px solid rgba(99, 240, 111, 0.34);
+            box-shadow:
+                0 32px 80px rgba(0, 0, 0, 0.5),
+                0 0 48px rgba(82, 226, 98, 0.18);
+        }
+
+        .board {
+            width: 100%;
+            aspect-ratio: 1;
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            overflow: hidden;
+            border-radius: 6px;
+            background: var(--dark-square);
+            box-shadow:
+                inset 0 0 0 1px rgba(0, 0, 0, 0.42),
+                0 16px 36px rgba(0, 0, 0, 0.35);
+        }
+
+        .square {
+            position: relative;
+            display: grid;
+            place-items: center;
+            min-width: 0;
+            min-height: 0;
+            padding: 0;
+            border: 0;
+            appearance: none;
+            cursor: pointer;
+            font: inherit;
+        }
+
+        .square.light {
+            background: var(--light-square);
+        }
+
+        .square.dark {
+            background: var(--dark-square);
+        }
+
+        .square.last-move::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 242, 102, 0.32);
+            z-index: 1;
+        }
+
+        .square.selected {
+            box-shadow: inset 0 0 0 4px rgba(82, 226, 98, 0.88);
+        }
+
+        .square.tutor-played-square {
+            box-shadow:
+                inset 0 0 0 5px rgba(255, 209, 102, 0.92),
+                inset 0 0 32px rgba(255, 209, 102, 0.24);
+        }
+
+        .square.tutor-played-square.danger {
+            box-shadow:
+                inset 0 0 0 5px rgba(255, 112, 112, 0.94),
+                inset 0 0 34px rgba(255, 112, 112, 0.28);
+        }
+
+        .square.tutor-played-square.strong,
+        .square.tutor-best-square {
+            box-shadow:
+                inset 0 0 0 5px rgba(99, 240, 111, 0.94),
+                inset 0 0 34px rgba(99, 240, 111, 0.26);
+        }
+
+        .square.tutor-played-target::after,
+        .square.tutor-best-target::after {
+            content: attr(data-badge);
+            position: absolute;
+            right: 6px;
+            top: 6px;
+            z-index: 5;
+            padding: 4px 6px;
+            border-radius: 5px;
+            background: rgba(5, 8, 6, 0.86);
+            color: #ffffff;
+            font-size: clamp(0.48rem, 0.7vw, 0.66rem);
+            line-height: 1;
+            font-weight: 900;
+            letter-spacing: 0.02em;
+            pointer-events: none;
+        }
+
+        .square.tutor-best-target::after {
+            background: rgba(18, 80, 32, 0.92);
+            color: var(--green-bright);
+        }
+
+        .square.legal-target::after {
+            content: "";
+            position: absolute;
+            width: 26%;
+            height: 26%;
+            border-radius: 999px;
+            background: rgba(17, 31, 12, 0.38);
+            z-index: 4;
+        }
+
+        .square.legal-target.has-piece::after {
+            width: 78%;
+            height: 78%;
+            background: transparent;
+            border: 5px solid rgba(17, 31, 12, 0.36);
+        }
+
+        .square.tutor-played-target:not(.legal-target)::after,
+        .square.tutor-best-target:not(.legal-target)::after {
+            content: attr(data-badge);
+            width: auto;
+            height: auto;
+            border: 0;
+            right: 6px;
+            top: 6px;
+            padding: 4px 6px;
+            border-radius: 5px;
+            background: rgba(5, 8, 6, 0.86);
+            color: #ffffff;
+            font-size: clamp(0.48rem, 0.7vw, 0.66rem);
+            line-height: 1;
+            font-weight: 900;
+            letter-spacing: 0.02em;
+        }
+
+        .square.tutor-best-target:not(.legal-target)::after {
+            background: rgba(18, 80, 32, 0.92);
+            color: var(--green-bright);
+        }
+
+        .square.tutorial-source {
+            box-shadow:
+                inset 0 0 0 4px rgba(99, 240, 111, 0.88),
+                inset 0 0 32px rgba(99, 240, 111, 0.22);
+        }
+
+        .square.tutorial-path {
+            box-shadow: inset 0 0 0 3px rgba(99, 240, 111, 0.34);
+        }
+
+        .square.tutorial-target {
+            box-shadow:
+                inset 0 0 0 5px rgba(99, 240, 111, 0.96),
+                inset 0 0 38px rgba(99, 240, 111, 0.32);
+        }
+
+        .square.tutorial-danger {
+            box-shadow:
+                inset 0 0 0 5px rgba(255, 112, 112, 0.9),
+                inset 0 0 34px rgba(255, 112, 112, 0.24);
+        }
+
+        .square.tutorial-complete {
+            box-shadow:
+                inset 0 0 0 5px rgba(255, 209, 102, 0.92),
+                inset 0 0 32px rgba(255, 209, 102, 0.26);
+        }
+
+        .tutorial-badge {
+            position: absolute;
+            right: 6px;
+            top: 6px;
+            z-index: 6;
+            display: grid;
+            place-items: center;
+            min-width: 24px;
+            min-height: 24px;
+            padding: 3px 6px;
+            border-radius: 999px;
+            background: rgba(5, 8, 6, 0.84);
+            color: var(--green-bright);
+            font-size: clamp(0.72rem, 1vw, 0.94rem);
+            line-height: 1;
+            font-weight: 900;
+            pointer-events: none;
+        }
+
+        .tutorial-badge.star {
+            color: #071008;
+            background: linear-gradient(135deg, #87ff8e, #30c24c);
+            box-shadow: 0 0 16px rgba(99, 240, 111, 0.46);
+        }
+
+        .piece {
+            width: 90%;
+            height: 90%;
+            object-fit: contain;
+            filter: drop-shadow(0 7px 6px rgba(0, 0, 0, 0.28));
+            user-select: none;
+            pointer-events: auto;
+            z-index: 2;
+        }
+
+        .piece.draggable-piece {
+            cursor: grab;
+        }
+
+        .coord {
+            position: absolute;
+            z-index: 3;
+            font-size: clamp(0.58rem, 0.9vw, 0.82rem);
+            line-height: 1;
+            font-weight: 900;
+            color: rgba(79, 129, 58, 0.98);
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .rank-label {
+            top: 5px;
+            left: 6px;
+        }
+
+        .file-label {
+            right: 6px;
+            bottom: 5px;
+        }
+
+        .bottom-player {
+            margin-top: 7px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: rgba(5, 24, 10, 0.8);
+            border: 1px solid rgba(99, 240, 111, 0.18);
+        }
+
+        .side-panel {
+            height: calc(100vh - 78px);
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-radius: 8px;
+            background: linear-gradient(145deg, rgba(5, 24, 10, 0.94), rgba(2, 10, 6, 0.96));
+            border: 1px solid rgba(99, 240, 111, 0.28);
+            box-shadow:
+                0 28px 70px rgba(0, 0, 0, 0.42),
+                0 0 42px rgba(82, 226, 98, 0.12);
+        }
+
+        .side-header {
+            padding: 12px 18px;
+            background: rgba(1, 8, 4, 0.72);
+            border-bottom: 1px solid var(--line);
+        }
+
+        .side-title {
+            margin: 0;
+            text-align: center;
+            font-size: 1.42rem;
+            font-weight: 900;
+        }
+
+        .chat-area {
+            padding: 12px 18px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .tutor-speech {
+            display: grid;
+            grid-template-columns: 58px minmax(0, 1fr);
+            gap: 14px;
+            align-items: end;
+        }
+
+        .tutor-speech .tutor-avatar {
+            width: 58px;
+            height: 58px;
+        }
+
+        .speech-bubble {
+            position: relative;
+            padding: 12px 14px;
+            border-radius: 8px;
+            background: #f4f6ed;
+            color: #1b241b;
+            font-size: 0.84rem;
+            line-height: 1.32;
+            font-weight: 900;
+        }
+
+        .speech-bubble::before {
+            content: "";
+            position: absolute;
+            left: -8px;
+            bottom: 16px;
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+            border-right: 8px solid #f4f6ed;
+        }
+
+        .tutor-profile {
+            padding: 12px 18px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .tutor-name-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+        }
+
+        .tutor-name-row h2 {
+            margin: 0;
+            font-size: 1.32rem;
+            font-weight: 900;
+        }
+
+        .tutor-name-row span {
+            color: var(--muted);
+            font-weight: 900;
+        }
+
+        .tutor-level {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+            font-size: 0.9rem;
+            font-weight: 900;
+        }
+
+        .feedback-panel {
+            padding: 10px 18px;
+            border-bottom: 1px solid var(--line);
+            background: rgba(99, 240, 111, 0.045);
+        }
+
+        .feedback-kicker {
+            margin: 0 0 8px;
+            color: var(--green-bright);
+            font-size: 0.7rem;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .feedback-title {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 900;
+        }
+
+        .feedback-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .speak-button {
+            min-height: 32px;
+            padding: 0 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(99, 240, 111, 0.28);
+            background: rgba(99, 240, 111, 0.08);
+            color: var(--green-bright);
+            font: inherit;
+            font-size: 0.72rem;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        .voice-tools {
+            margin-top: 8px;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .voice-select {
+            min-height: 34px;
+            min-width: 0;
+            padding: 0 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(99, 240, 111, 0.22);
+            background: rgba(1, 8, 4, 0.72);
+            color: var(--text);
+            font: inherit;
+            font-size: 0.7rem;
+            font-weight: 800;
+        }
+
+        .voice-toggle {
+            min-height: 34px;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 0 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(99, 240, 111, 0.22);
+            background: rgba(99, 240, 111, 0.08);
+            color: var(--muted);
+            font-size: 0.7rem;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .feedback-title.warning {
+            color: var(--warning);
+        }
+
+        .feedback-title.danger {
+            color: var(--danger);
+        }
+
+        .feedback-title.strong {
+            color: var(--green-bright);
+        }
+
+        .feedback-message {
+            margin: 7px 0 0;
+            color: #edf6ea;
+            font-size: 0.76rem;
+            line-height: 1.32;
+            font-weight: 800;
+        }
+
+        .feedback-meta {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 4px;
+            margin-top: 9px;
+            padding-top: 8px;
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+            font-size: 0.68rem;
+            font-weight: 900;
+        }
+
+        .feedback-meta strong {
+            color: #ffffff;
+        }
+
+        .coach-tools {
+            padding: 10px 18px;
+            border-bottom: 1px solid var(--line);
+            background: rgba(1, 8, 4, 0.34);
+        }
+
+        .coach-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 7px;
+        }
+
+        .coach-card {
+            min-height: 42px;
+            padding: 7px 8px;
+            border-radius: 8px;
+            border: 1px solid rgba(99, 240, 111, 0.18);
+            background: rgba(99, 240, 111, 0.06);
+        }
+
+        .coach-card span {
+            display: block;
+            color: var(--green-bright);
+            font-size: 0.58rem;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .coach-card strong {
+            display: block;
+            margin-top: 3px;
+            color: #edf6ea;
+            font-size: 0.66rem;
+            line-height: 1.2;
+        }
+
+        .coach-hint {
+            margin-top: 8px;
+            padding: 8px 10px;
+            border-left: 3px solid var(--green-bright);
+            background: rgba(99, 240, 111, 0.07);
+            color: #edf6ea;
+            font-size: 0.72rem;
+            line-height: 1.35;
+            font-weight: 850;
+        }
+
+        .coach-tools.active-tips .coach-hint {
+            margin-top: 0;
+            padding: 12px 14px;
+            font-size: 0.8rem;
+        }
+
+        .coach-tools.starter-mode {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 14px;
+        }
+
+        .coach-tools.starter-mode .coach-grid {
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .coach-tools.starter-mode .coach-card {
+            min-height: 64px;
+            padding: 12px 14px;
+        }
+
+        .coach-tools.starter-mode .coach-card span {
+            font-size: 0.72rem;
+        }
+
+        .coach-tools.starter-mode .coach-card strong {
+            font-size: 0.84rem;
+        }
+
+        .coach-tools.starter-mode .coach-hint {
+            padding: 12px 14px;
+            font-size: 0.84rem;
+        }
+
+        .move-log {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+            padding: 12px 18px;
+            display: grid;
+            align-content: start;
+            gap: 8px;
+            scrollbar-width: auto;
+            scrollbar-color: #63f06f rgba(5, 24, 10, 0.9);
+        }
+
+        .move-log::-webkit-scrollbar {
+            width: 15px;
+        }
+
+        .move-log::-webkit-scrollbar-track {
+            background: rgba(99, 240, 111, 0.09);
+            border: 1px solid rgba(99, 240, 111, 0.14);
+            border-radius: 999px;
+        }
+
+        .move-log::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #63f06f, #238c3f);
+            border: 3px solid rgba(5, 24, 10, 0.92);
+            border-radius: 999px;
+            box-shadow: 0 0 12px rgba(99, 240, 111, 0.34);
+        }
+
+        .move-log.pre-game-empty {
+            flex: 0;
+            min-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            overflow: hidden;
+        }
+
+        .move-row {
+            display: grid;
+            grid-template-columns: 42px 1fr 1fr;
+            gap: 10px;
+            align-items: center;
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: rgba(99, 240, 111, 0.08);
+            border: 1px solid rgba(99, 240, 111, 0.14);
+            color: #e6efe3;
+            font-weight: 900;
+        }
+
+        .move-row span:first-child {
+            color: var(--green-bright);
+        }
+
+        .empty-log {
+            color: var(--muted);
+            font-size: 0.92rem;
+            font-weight: 800;
+            line-height: 1.45;
+        }
+
+        .tutorial-guide {
+            display: grid;
+            gap: 9px;
+        }
+
+        .tutorial-guide-title {
+            margin: 0;
+            color: #ffffff;
+            font-size: 0.95rem;
+            font-weight: 900;
+        }
+
+        .tutorial-guide-copy {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.88rem;
+            line-height: 1.38;
+            font-weight: 800;
+        }
+
+        .tutorial-rule-list {
+            display: grid;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .tutorial-rule {
+            padding: 9px 10px;
+            border-radius: 8px;
+            background: rgba(99, 240, 111, 0.07);
+            border: 1px solid rgba(99, 240, 111, 0.14);
+            color: #edf6ea;
+            font-size: 0.82rem;
+            font-weight: 900;
+            line-height: 1.28;
+        }
+
+        .notation-demo {
+            display: grid;
+            gap: 8px;
+        }
+
+        .notation-card {
+            display: grid;
+            gap: 8px;
+            min-width: 0;
+            padding: 9px 10px;
+            border-radius: 8px;
+            background: rgba(1, 8, 4, 0.52);
+            border: 1px solid rgba(99, 240, 111, 0.18);
+        }
+
+        .notation-code {
+            display: inline-flex;
+            align-items: center;
+            justify-self: start;
+            gap: 0;
+            padding: 4px 6px;
+            border-radius: 7px;
+            background: rgba(99, 240, 111, 0.08);
+            border: 1px solid rgba(99, 240, 111, 0.24);
+            color: #ffffff;
+            font-size: 0.82rem;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .notation-token {
+            display: inline-grid;
+            place-items: center;
+            min-width: 26px;
+            min-height: 26px;
+            padding: 0 6px;
+            border-radius: 999px;
+            line-height: 1;
+        }
+
+        .notation-piece {
+            color: #071008;
+            background: linear-gradient(135deg, #87ff8e, #30c24c);
+            box-shadow: 0 0 14px rgba(99, 240, 111, 0.35);
+        }
+
+        .notation-square {
+            border-radius: 6px;
+            border: 1px solid rgba(99, 240, 111, 0.45);
+            color: var(--green-bright);
+        }
+
+        .notation-breakdown {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .notation-chip {
+            padding: 5px 7px;
+            border-radius: 999px;
+            background: rgba(99, 240, 111, 0.08);
+            border: 1px solid rgba(99, 240, 111, 0.18);
+            color: #edf6ea;
+            font-size: 0.76rem;
+            line-height: 1;
+            font-weight: 900;
+        }
+
+        .notation-meaning {
+            color: var(--green-bright);
+            font-size: 0.84rem;
+            font-weight: 900;
+            line-height: 1.25;
+        }
+
+        .notation-quiz {
+            display: grid;
+            gap: 8px;
+        }
+
+        .quiz-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 82px;
+            gap: 8px;
+            align-items: center;
+            padding: 8px 10px;
+            border-radius: 8px;
+            background: rgba(99, 240, 111, 0.06);
+            border: 1px solid rgba(99, 240, 111, 0.14);
+        }
+
+        .quiz-row.active {
+            border-color: rgba(99, 240, 111, 0.56);
+            box-shadow: inset 0 0 0 1px rgba(99, 240, 111, 0.16);
+        }
+
+        .quiz-prompt {
+            color: #edf6ea;
+            font-size: 0.86rem;
+            font-weight: 900;
+            line-height: 1.25;
+        }
+
+        .quiz-prompt.notation-question {
+            justify-self: start;
+            padding: 5px 9px;
+            border-radius: 7px;
+            background: rgba(99, 240, 111, 0.1);
+            border: 1px solid rgba(99, 240, 111, 0.26);
+            color: var(--green-bright);
+            font-size: 0.96rem;
+            letter-spacing: 0.03em;
+        }
+
+        .quiz-answer {
+            min-height: 30px;
+            display: grid;
+            place-items: center;
+            border-radius: 7px;
+            border: 1px solid rgba(99, 240, 111, 0.24);
+            background: rgba(1, 8, 4, 0.58);
+            color: var(--green-bright);
+            font-size: 0.9rem;
+            font-weight: 900;
+        }
+
+        .quiz-answer.empty {
+            color: rgba(237, 246, 234, 0.36);
+        }
+
+        .error-message {
+            min-height: 20px;
+            margin: 0;
+            padding: 0 18px 10px;
+            color: #ff9a9a;
+            font-size: 0.72rem;
+            font-weight: 900;
+        }
+
+        .game-actions {
+            padding: 8px 14px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            border-top: 1px solid var(--line);
+            background: rgba(1, 8, 4, 0.55);
+        }
+
+        .control-button {
+            min-height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            border: 1px solid rgba(99, 240, 111, 0.28);
+            background: rgba(99, 240, 111, 0.08);
+            color: var(--green-bright);
+            font: inherit;
+            font-size: 0.78rem;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        .control-button:disabled {
+            cursor: default;
+            opacity: 0.45;
+        }
+
+        .control-button.exit {
+            border-color: rgba(255, 112, 112, 0.4);
+            color: #ff9a9a;
+            background: rgba(255, 112, 112, 0.08);
+        }
+
+        .control-button.full {
+            grid-column: 1 / 3;
+            min-height: 38px;
+            font-size: 0.84rem;
+        }
+
+        .control-button.status-label {
+            cursor: default;
+        }
+
+        .control-button.status-label.next-ready {
+            cursor: pointer;
+            box-shadow: 0 0 18px rgba(84, 255, 122, 0.22);
+        }
+
+        .setup-overlay,
+        .promotion-overlay,
+        .opening-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 20;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            background: rgba(1, 8, 4, 0.74);
+            backdrop-filter: blur(16px);
+        }
+
+        .setup-card,
+        .promotion-card {
+            width: min(760px, 100%);
+            max-height: min(760px, calc(100vh - 48px));
+            overflow: auto;
+            padding: 24px;
+            border-radius: 8px;
+            background: linear-gradient(145deg, rgba(5, 24, 10, 0.98), rgba(2, 10, 6, 0.98));
+            border: 1px solid rgba(99, 240, 111, 0.34);
+            box-shadow:
+                0 32px 80px rgba(0, 0, 0, 0.5),
+                0 0 48px rgba(82, 226, 98, 0.18);
+        }
+
+        .opening-panel {
+            width: min(1040px, calc(100vw - 52px));
+            max-height: min(840px, calc(100vh - 52px));
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-radius: 10px;
+            border: 1px solid rgba(99, 240, 111, 0.34);
+            background:
+                radial-gradient(circle at 78% 4%, rgba(99, 240, 111, 0.15), transparent 34%),
+                linear-gradient(145deg, rgba(5, 24, 10, 0.98), rgba(1, 8, 4, 0.98));
+            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.62), 0 0 70px rgba(99, 240, 111, 0.18);
+        }
+
+        .opening-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 20px 22px 18px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .opening-kicker {
+            margin: 0 0 6px;
+            color: var(--green-bright);
+            font-size: 0.78rem;
+            font-weight: 900;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        .opening-title {
+            margin: 0;
+            color: #ffffff;
+            font-size: clamp(1.7rem, 3vw, 2.55rem);
+            line-height: 0.95;
+            font-weight: 900;
+        }
+
+        .opening-copy {
+            margin: 8px 0 0;
+            color: var(--muted);
+            font-size: 0.94rem;
+            line-height: 1.35;
+            font-weight: 800;
+        }
+
+        .opening-close {
+            min-width: 92px;
+            min-height: 42px;
+            border: 1px solid rgba(99, 240, 111, 0.35);
+            border-radius: 8px;
+            background: rgba(99, 240, 111, 0.08);
+            color: var(--green-bright);
+            font: inherit;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        .opening-content {
+            overflow: auto;
+            padding: 18px 22px 22px;
+            scrollbar-width: auto;
+            scrollbar-color: #63f06f rgba(5, 24, 10, 0.9);
+        }
+
+        .opening-content::-webkit-scrollbar {
+            width: 14px;
+        }
+
+        .opening-content::-webkit-scrollbar-track {
+            background: rgba(99, 240, 111, 0.08);
+            border-radius: 999px;
+        }
+
+        .opening-content::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #63f06f, #238c3f);
+            border: 3px solid rgba(5, 24, 10, 0.95);
+            border-radius: 999px;
+        }
+
+        .opening-section {
+            display: grid;
+            gap: 12px;
+            padding-bottom: 24px;
+        }
+
+        .opening-section + .opening-section {
+            padding-top: 2px;
+            border-top: 1px solid rgba(99, 240, 111, 0.12);
+        }
+
+        .opening-section-title {
+            margin: 0;
+            color: #ffffff;
+            font-size: 1rem;
+            font-weight: 900;
+        }
+
+        .opening-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .opening-card {
+            display: grid;
+            gap: 9px;
+            min-width: 0;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(99, 240, 111, 0.17);
+            background: rgba(1, 8, 4, 0.46);
+        }
+
+        .opening-card:hover {
+            border-color: rgba(99, 240, 111, 0.44);
+            background: rgba(99, 240, 111, 0.07);
+            box-shadow: 0 0 24px rgba(99, 240, 111, 0.08);
+        }
+
+        .opening-mini-board {
+            aspect-ratio: 1;
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            overflow: hidden;
+            border-radius: 4px;
+            border: 1px solid rgba(0, 0, 0, 0.34);
+            background: var(--dark-square);
+        }
+
+        .opening-mini-square {
+            position: relative;
+            display: grid;
+            place-items: center;
+        }
+
+        .opening-mini-square.light {
+            background: var(--light-square);
+        }
+
+        .opening-mini-square.dark {
+            background: var(--dark-square);
+        }
+
+        .opening-mini-square.latest::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: rgba(99, 240, 111, 0.26);
+            box-shadow: inset 0 0 0 2px rgba(99, 240, 111, 0.42);
+        }
+
+        .opening-mini-square img {
+            position: relative;
+            z-index: 1;
+            width: 90%;
+            height: 90%;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35));
+        }
+
+        .opening-card-title {
+            margin: 0;
+            color: #edf6ea;
+            font-size: 0.92rem;
+            line-height: 1.15;
+            font-weight: 900;
+        }
+
+        .opening-card-line {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            color: var(--muted);
+            font-size: 0.72rem;
+            line-height: 1.25;
+            font-weight: 900;
+        }
+
+        .opening-tag {
+            color: var(--green-bright);
+            white-space: nowrap;
+        }
+
+        .setup-kicker {
+            margin: 0 0 8px;
+            color: var(--green-bright);
+            font-size: 0.8rem;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .setup-title {
+            margin: 0 0 10px;
+            font-size: clamp(2rem, 5vw, 3rem);
+            line-height: 1;
+            font-weight: 900;
+        }
+
+        .setup-copy {
+            margin: 0 0 18px;
+            color: var(--muted);
+            font-weight: 800;
+            line-height: 1.45;
+        }
+
+        .side-choice {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .side-button {
+            min-height: 62px;
+            border-radius: 8px;
+            border: 1px solid rgba(99, 240, 111, 0.32);
+            background: rgba(99, 240, 111, 0.08);
+            color: #ffffff;
+            font: inherit;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        .side-button:hover {
+            border-color: rgba(99, 240, 111, 0.72);
+            box-shadow: 0 0 28px rgba(82, 226, 98, 0.18);
+        }
+
+        .side-button.primary {
+            background: linear-gradient(135deg, #6df36f, #2fb84b);
+            color: #051006;
+        }
+
+        .lesson-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+        .lesson {
+            padding: 14px;
+            border-radius: 8px;
+            background: rgba(99, 240, 111, 0.08);
+            border: 1px solid rgba(99, 240, 111, 0.14);
+        }
+
+        .lesson h3 {
+            margin: 0 0 6px;
+            color: #ffffff;
+            font-size: 0.98rem;
+        }
+
+        .lesson p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.36;
+            font-weight: 800;
+        }
+
+        .primary-button {
+            min-height: 50px;
+            width: 100%;
+            border: 0;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #6df36f, #2fb84b);
+            color: #051006;
+            font: inherit;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        .promotion-card {
+            width: min(420px, 100%);
+        }
+
+        .promotion-choice {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .promotion-button {
+            min-height: 78px;
+            border-radius: 8px;
+            border: 1px solid rgba(99, 240, 111, 0.32);
+            background: rgba(99, 240, 111, 0.08);
+            color: #ffffff;
+            font: inherit;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        .promotion-button img {
+            width: 54px;
+            height: 54px;
+            display: block;
+            margin: 0 auto 4px;
+            object-fit: contain;
+            pointer-events: none;
+        }
+
+        .csrf-form {
+            display: none;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        @media (max-width: 1120px) {
+            body {
+                overflow: auto;
+            }
+
+            .game-page {
+                height: auto;
+                min-height: 100vh;
+                overflow: visible;
+            }
+
+            :root {
+                --board-size: min(72vh, 100%);
+            }
+
+            .game-shell {
+                height: auto;
+                grid-template-columns: 1fr;
+            }
+
+            .side-panel {
+                height: auto;
+                min-height: 560px;
+            }
+
+            .eval-rail {
+                left: 10px;
+                top: 14px;
+                bottom: 14px;
+                z-index: 7;
+                opacity: 0.92;
+            }
+
+            .eval-tag {
+                left: 4px;
+                top: 20px;
+                z-index: 7;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .game-page {
+                padding: 18px;
+            }
+
+            .navbar,
+            .match-top {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .nav-links {
+                width: 100%;
+                gap: 18px;
+                overflow-x: auto;
+                padding-bottom: 4px;
+            }
+
+            .lesson-grid,
+            .game-actions {
+                grid-template-columns: 1fr;
+            }
+
+            .control-button.full {
+                grid-column: auto;
+            }
+
+            .opening-header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .opening-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+
+        /* Keep the site mark consistent across every page. */
+        .logo-mark,
+        .brand-mark {
+            color: rgba(231, 255, 226, 0.34) !important;
+            text-shadow: 0 0 10px rgba(240, 255, 236, 0.18);
+        }
+
+        .nav-avatar {
+            color: #061107;
+        }
+    </style>
+</head>
+<body>
+    <main class="game-page">
+                <!-- Tutor game navbar keeps the training mode visually consistent. -->
+<nav class="navbar">
+            <a href="{% url 'home' %}" class="logo">
+                <span class="logo-mark">♞</span>
+                Chess <span>Tutor</span>
+            </a>
+
+            <div class="nav-links">
+                <a href="{% url 'play' %}">Play</a>
+                <a href="{% url 'tutors' %}" class="active">Tutors</a>
+                <a href="{% url 'puzzles' %}">Puzzles</a>
+                <a href="{% url 'dashboard' %}">Dashboard</a>
+            </div>
+
+            <div class="auth-links">
+                <span class="profile-link">
+                    <span class="nav-avatar">
+                        {% if account_profile.avatar %}
+                            <img src="{{ account_profile.avatar.url }}" alt="{{ request.user.username }} profile picture">
+                        {% else %}
+                            {{ request.user.username|slice:":2"|upper }}
+                        {% endif %}
+                    </span>
+                    <span class="auth-user">{{ request.user.username }}</span>
+                </span>
+                <a href="{% url 'account_settings' %}" class="auth-button">Settings</a>
+            </div>
+        </nav>
+
+        <div class="game-shell">
+            <section class="board-column" aria-label="Tutor board">
+                <div class="match-top">
+                    <div class="player-strip">
+                        <div class="tutor-avatar">
+                            <img src="{% static tutor.avatar %}" alt="{{ tutor.name }}">
+                        </div>
+                        <div>
+                            <h1 class="player-name">{{ tutor.name }}</h1>
+                            <p class="player-meta">{{ tutor.level }} - {{ tutor.elo }} ELO tutor</p>
+                            <div class="captured-row" id="top-captures" aria-label="Tutor captures"></div>
+                        </div>
+                    </div>
+                    <div class="match-actions">
+                        <span class="move-pill" id="move-pill">Move {{ game_state.move_number }}</span>
+                        <button type="button" class="opening-button" id="openings-button">Openings</button>
+                    </div>
+                </div>
+
+                <div class="board-area">
+                    <div class="eval-rail" aria-label="Evaluation bar">
+                        <div class="eval-white" id="eval-white"></div>
+                        <span class="eval-tag" id="eval-label">Even</span>
+                    </div>
+                    <div class="board-frame">
+                        <div class="board" id="chess-board" aria-label="Chess board"></div>
+                    </div>
+                </div>
+
+                <div class="bottom-player">
+                    <div class="player-strip">
+                        <div class="avatar {% if account_profile.avatar %}image{% endif %}">
+                            {% if account_profile.avatar %}
+                                <img src="{{ account_profile.avatar.url }}" alt="{{ request.user.username }} profile picture">
+                            {% else %}
+                                {{ request.user.username|slice:":2"|upper }}
+                            {% endif %}
+                        </div>
+                        <div>
+                            <h2 class="player-name">{{ request.user.username }}</h2>
+                            <p class="player-meta" id="player-meta">{{ game_state.player_elo }} ELO - guided training - {{ game_state.engine_source }}</p>
+                            <div class="captured-row" id="bottom-captures" aria-label="Your captures"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <aside class="side-panel" aria-label="Tutor feedback and controls">
+                <div class="side-header">
+                    <h2 class="side-title">Tutor Coach</h2>
+                </div>
+
+                <div class="chat-area">
+                    <div class="tutor-speech">
+                        <div class="tutor-avatar">
+                            <img src="{% static tutor.avatar %}" alt="{{ tutor.name }}">
+                        </div>
+                        <div class="speech-bubble" id="primary-chat">{{ tutor.intro }}</div>
+                    </div>
+                </div>
+
+                <div class="tutor-profile">
+                    <div class="tutor-name-row">
+                        <h2>{{ tutor.name }}</h2>
+                        <span>{{ tutor.elo }} ELO</span>
+                    </div>
+                    <div class="tutor-level">{{ tutor.level }} - {{ tutor.style }}</div>
+                </div>
+
+                <div class="feedback-panel" id="feedback-panel">
+                    <p class="feedback-kicker">Live tutor feedback</p>
+                    <div class="feedback-heading">
+                        <h3 class="feedback-title" id="feedback-title">Make your first move</h3>
+                        <button type="button" class="speak-button" id="speak-button">Replay Voice</button>
+                    </div>
+                    <p class="feedback-message" id="feedback-message">Your tutor will compare your move against the best move, explain mistakes and let you go back.</p>
+                    <div class="feedback-meta" id="feedback-meta" hidden></div>
+                    <div class="voice-tools">
+                        <select class="voice-select" id="voice-select" aria-label="Tutor voice">
+                            <option value="">Default browser voice</option>
+                        </select>
+                        <label class="voice-toggle">
+                            <input type="checkbox" id="auto-speak-toggle" checked>
+                            Auto
+                        </label>
+                    </div>
+                </div>
+
+                <div class="coach-tools" id="coach-tools">
+                    <p class="feedback-kicker">Coach tips</p>
+                    <div class="coach-grid" id="coach-starter-tips">
+                        <div class="coach-card">
+                            <span>1. Scan</span>
+                            <strong>Checks, captures, threats</strong>
+                        </div>
+                        <div class="coach-card">
+                            <span>2. Plan</span>
+                            <strong>Worst piece, king safety</strong>
+                        </div>
+                        <div class="coach-card">
+                            <span>3. Review</span>
+                            <strong>Use Go Back after mistakes</strong>
+                        </div>
+                    </div>
+                    <div class="coach-hint" id="coach-hint">Before every move, check forcing moves first: checks, captures and threats.</div>
+                </div>
+
+                <div class="move-log" id="move-log"></div>
+
+                <p class="error-message" id="move-error" aria-live="polite"></p>
+
+                <div class="game-actions">
+                    <button type="button" class="control-button exit" id="undo-button">Go Back</button>
+                    <button type="button" class="control-button" id="move-log-toggle">Moves</button>
+                    <button type="button" class="control-button full status-label" id="position-label">{{ game_state.status_text }}</button>
+                </div>
+            </aside>
+        </div>
+
+        <div class="setup-overlay" id="setup-overlay" hidden>
+            <section class="setup-card" aria-label="Choose side">
+                <p class="setup-kicker">Start Training</p>
+                <h2 class="setup-title">Choose Your Side</h2>
+                <p class="setup-copy">Pick white to move first, or black to let {{ tutor.name }} make the opening move.</p>
+                <div class="side-choice">
+                    <button type="button" class="side-button primary" data-side="white">Play White</button>
+                    <button type="button" class="side-button" data-side="black">Play Black</button>
+                </div>
+            </section>
+        </div>
+
+        <div class="promotion-overlay" id="promotion-overlay" hidden>
+            <section class="promotion-card" aria-label="Choose promotion piece">
+                <p class="setup-kicker">Promotion</p>
+                <h2 class="setup-title">Choose Piece</h2>
+                <div class="promotion-choice" id="promotion-choice"></div>
+            </section>
+        </div>
+
+        <div class="opening-overlay" id="opening-overlay" hidden>
+            <section class="opening-panel" aria-label="Opening guide">
+                <div class="opening-header">
+                    <div>
+                        <p class="opening-kicker">Opening guide</p>
+                        <h2 class="opening-title">Choose A Plan</h2>
+                        <p class="opening-copy">Use this before the first few moves. Pick a centre idea, develop pieces, and keep your king safe.</p>
+                    </div>
+                    <button type="button" class="opening-close" id="opening-close">Close</button>
+                </div>
+                <div class="opening-content" id="opening-content"></div>
+            </section>
+        </div>
+
+        <form class="csrf-form">{% csrf_token %}</form>
+        {{ game_state|json_script:"initial-game-state" }}
+    </main>
+
+    <script>
+        const files = ["a", "b", "c", "d", "e", "f", "g", "h"];
+        const whiteRanks = [8, 7, 6, 5, 4, 3, 2, 1];
+        const blackRanks = [1, 2, 3, 4, 5, 6, 7, 8];
+        const promotionPieces = ["q", "r", "b", "n"];
+        const pieceImages = {
+            wp: "{% static 'main/pieces/neo/wp.png' %}",
+            wn: "{% static 'main/pieces/neo/wn.png' %}",
+            wb: "{% static 'main/pieces/neo/wb.png' %}",
+            wr: "{% static 'main/pieces/neo/wr.png' %}",
+            wq: "{% static 'main/pieces/neo/wq.png' %}",
+            wk: "{% static 'main/pieces/neo/wk.png' %}",
+            bp: "{% static 'main/pieces/neo/bp.png' %}",
+            bn: "{% static 'main/pieces/neo/bn.png' %}",
+            bb: "{% static 'main/pieces/neo/bb.png' %}",
+            br: "{% static 'main/pieces/neo/br.png' %}",
+            bq: "{% static 'main/pieces/neo/bq.png' %}",
+            bk: "{% static 'main/pieces/neo/bk.png' %}",
+        };
+        const pieceNames = {
+            p: "Pawn",
+            q: "Queen",
+            r: "Rook",
+            b: "Bishop",
+            n: "Knight",
+            k: "King",
+        };
+        const captureValues = {
+            p: 1,
+            n: 3,
+            b: 3,
+            r: 5,
+            q: 9,
+            k: 0,
+        };
+        const isTutorialTutor = {% if tutorial_lessons %}true{% else %}false{% endif %};
+        const startingPieces = [
+            { square: "a8", piece: "br" }, { square: "b8", piece: "bn" }, { square: "c8", piece: "bb" }, { square: "d8", piece: "bq" },
+            { square: "e8", piece: "bk" }, { square: "f8", piece: "bb" }, { square: "g8", piece: "bn" }, { square: "h8", piece: "br" },
+            { square: "a7", piece: "bp" }, { square: "b7", piece: "bp" }, { square: "c7", piece: "bp" }, { square: "d7", piece: "bp" },
+            { square: "e7", piece: "bp" }, { square: "f7", piece: "bp" }, { square: "g7", piece: "bp" }, { square: "h7", piece: "bp" },
+            { square: "a2", piece: "wp" }, { square: "b2", piece: "wp" }, { square: "c2", piece: "wp" }, { square: "d2", piece: "wp" },
+            { square: "e2", piece: "wp" }, { square: "f2", piece: "wp" }, { square: "g2", piece: "wp" }, { square: "h2", piece: "wp" },
+            { square: "a1", piece: "wr" }, { square: "b1", piece: "wn" }, { square: "c1", piece: "wb" }, { square: "d1", piece: "wq" },
+            { square: "e1", piece: "wk" }, { square: "f1", piece: "wb" }, { square: "g1", piece: "wn" }, { square: "h1", piece: "wr" },
+        ];
+        const startingLegalMoves = [
+            "a2a3", "a2a4", "b2b3", "b2b4", "c2c3", "c2c4", "d2d3", "d2d4",
+            "e2e3", "e2e4", "f2f3", "f2f4", "g2g3", "g2g4", "h2h3", "h2h4",
+            "b1a3", "b1c3", "g1f3", "g1h3",
+        ];
+        const openingSections = [
+            {
+                title: "1. e4",
+                openings: [
+                    { name: "Sicilian Defense", tag: "sharp reply", moves: ["e2e4", "c7c5"] },
+                    { name: "French Defense", tag: "solid centre", moves: ["e2e4", "e7e6"] },
+                    { name: "Ruy Lopez Opening", tag: "classic pressure", moves: ["e2e4", "e7e5", "g1f3", "b8c6", "f1b5"] },
+                    { name: "Caro-Kann Defense", tag: "strong structure", moves: ["e2e4", "c7c6"] },
+                    { name: "Italian Game", tag: "fast development", moves: ["e2e4", "e7e5", "g1f3", "b8c6", "f1c4"] },
+                    { name: "Scandinavian Defense", tag: "early queen tension", moves: ["e2e4", "d7d5"] },
+                    { name: "Pirc Defense", tag: "counter attack", moves: ["e2e4", "d7d6", "d2d4", "g8f6"] },
+                    { name: "Alekhine's Defense", tag: "knight pressure", moves: ["e2e4", "g8f6"] },
+                    { name: "King's Gambit", tag: "aggressive", moves: ["e2e4", "e7e5", "f2f4"] },
+                    { name: "Scotch Game", tag: "open centre", moves: ["e2e4", "e7e5", "g1f3", "b8c6", "d2d4"] },
+                    { name: "Vienna Game", tag: "flexible setup", moves: ["e2e4", "e7e5", "b1c3"] },
+                ],
+            },
+            {
+                title: "1. d4",
+                openings: [
+                    { name: "Queen's Gambit", tag: "space grab", moves: ["d2d4", "d7d5", "c2c4"] },
+                    { name: "Slav Defense", tag: "solid reply", moves: ["d2d4", "d7d5", "c2c4", "c7c6"] },
+                    { name: "King's Indian Defense", tag: "kingside build", moves: ["d2d4", "g8f6", "c2c4", "g7g6"] },
+                    { name: "Nimzo-Indian Defense", tag: "pin pressure", moves: ["d2d4", "g8f6", "c2c4", "e7e6", "b1c3", "f8b4"] },
+                    { name: "Queen's Indian Defense", tag: "dark-square control", moves: ["d2d4", "g8f6", "c2c4", "e7e6", "g1f3", "b7b6"] },
+                    { name: "Catalan Opening", tag: "long diagonal", moves: ["d2d4", "g8f6", "c2c4", "e7e6", "g2g3"] },
+                    { name: "Bogo-Indian Defense", tag: "early bishop check", moves: ["d2d4", "g8f6", "c2c4", "e7e6", "g1f3", "f8b4"] },
+                    { name: "Grunfeld Defense", tag: "centre challenge", moves: ["d2d4", "g8f6", "c2c4", "g7g6", "b1c3", "d7d5"] },
+                    { name: "Dutch Defense", tag: "f-file fight", moves: ["d2d4", "f7f5"] },
+                    { name: "London System", tag: "simple setup", moves: ["d2d4", "d7d5", "c1f4", "g8f6", "g1f3", "e7e6", "e2e3"] },
+                    { name: "Trompowsky Attack", tag: "quick bishop pin", moves: ["d2d4", "g8f6", "c1g5"] },
+                    { name: "Benko Gambit", tag: "queenside pressure", moves: ["d2d4", "g8f6", "c2c4", "c7c5", "d4d5", "b7b5"] },
+                ],
+            },
+            {
+                title: "Other",
+                openings: [
+                    { name: "Reti Opening", tag: "knight first", moves: ["g1f3"] },
+                    { name: "English Opening", tag: "flank control", moves: ["c2c4"] },
+                    { name: "Bird's Opening", tag: "risky pressure", moves: ["f2f4"] },
+                    { name: "King's Indian Attack", tag: "system play", moves: ["g1f3", "d7d5", "g2g3"] },
+                    { name: "King's Fianchetto Opening", tag: "bishop diagonal", moves: ["g2g3"] },
+                    { name: "Nimzowitsch-Larsen Attack", tag: "b-file bishop", moves: ["b2b3"] },
+                    { name: "Polish Opening", tag: "queenside space", moves: ["b2b4"] },
+                    { name: "Grob Opening", tag: "dangerous experiment", moves: ["g2g4"] },
+                ],
+            },
+        ];
+        const notationPieces = [
+            { square: "a8", piece: "br" }, { square: "d7", piece: "bq" }, { square: "f8", piece: "br" }, { square: "g8", piece: "bk" },
+            { square: "c6", piece: "bn" }, { square: "f6", piece: "bn" }, { square: "e6", piece: "bb" }, { square: "g7", piece: "bb" },
+            { square: "a7", piece: "bp" }, { square: "b7", piece: "bp" }, { square: "c5", piece: "bp" }, { square: "d6", piece: "bp" },
+            { square: "e5", piece: "bp" }, { square: "f7", piece: "bp" }, { square: "g6", piece: "bp" }, { square: "h7", piece: "bp" },
+            { square: "a1", piece: "wr" }, { square: "d2", piece: "wq" }, { square: "f1", piece: "wr" }, { square: "g1", piece: "wk" },
+            { square: "c3", piece: "wn" }, { square: "f3", piece: "wn" }, { square: "e3", piece: "wb" }, { square: "g2", piece: "wb" },
+            { square: "a2", piece: "wp" }, { square: "b2", piece: "wp" }, { square: "c4", piece: "wp" }, { square: "d4", piece: "wp" },
+            { square: "e4", piece: "wp" }, { square: "f2", piece: "wp" }, { square: "g3", piece: "wp" }, { square: "h2", piece: "wp" },
+        ];
+        const tutorialSteps = [
+            {
+                title: "Starting Position",
+                type: "reading",
+                text: "Every game starts with the same setup. White is at the bottom, black is at the top, pawns protect the front line and the back rank holds the main pieces.",
+                note: "Piece values help you judge trades. They are guides, not perfect rules, because checkmate matters more than material.",
+                action: "Read the starting setup, then press ★.",
+                completeText: "Good. You know where the pieces start and roughly what each piece is worth.",
+                chat: "Start here. Pawns are worth 1, knights and bishops 3, rooks 5, queens 9. The king is priceless: you do not trade it, you protect it.",
+                pieces: startingPieces,
+                highlights: [
+                    { square: "a1", type: "path", label: "Rook" },
+                    { square: "b1", type: "source", label: "Knight" },
+                    { square: "c1", type: "path", label: "Bishop" },
+                    { square: "d1", type: "path", label: "Queen" },
+                    { square: "e1", type: "path", label: "King" },
+                    { square: "e2", type: "source", label: "Pawn" },
+                ],
+                readingRules: [
+                    "Pawn = 1 point. Pawns are small, but they control space and can promote.",
+                    "Knight = 3 points. Knights jump over pieces and are strong near the centre.",
+                    "Bishop = 3 points. Bishops control long diagonals when the board opens.",
+                    "Rook = 5 points. Rooks become powerful on open files and ranks.",
+                    "Queen = 9 points. The queen is the strongest attacking piece.",
+                    "King = priceless. You cannot lose the king; checkmate ends the game.",
+                ],
+            },
+            {
+                title: "Chess Notation",
+                type: "notation-quiz",
+                text: "Chess notation is a map. The letters along the bottom are files: a to h. The numbers on the side are ranks: 1 to 8. Put them together to name a square.",
+                note: "Some questions describe the piece. Some show notation, like Nc6. In both cases, click the matching piece on the board.",
+                action: "Match each piece to its notation square.",
+                completeText: "Good. You matched the pieces to their notation squares.",
+                chat: "Use the board coordinates. File letter first, rank number second. Piece letters go in front, but pawns use the square name without a letter.",
+                pieces: notationPieces,
+                notationExamples: [
+                    { piece: "R", pieceName: "rook", square: "f1", meaning: "Rf1 = rook on f1" },
+                    { piece: "N", pieceName: "knight", square: "c6", meaning: "Nc6 = knight on c6" },
+                    { square: "e4", pieceName: "pawn", meaning: "e4 = pawn on e4" },
+                ],
+                quizItems: [
+                    { prompt: "White rook beside the king", square: "f1", answer: "Rf1" },
+                    { prompt: "Nc6", square: "c6", answer: "Nc6", notation: true },
+                    { prompt: "White queen", square: "d2", answer: "Qd2" },
+                    { prompt: "Bg7", square: "g7", answer: "Bg7", notation: true },
+                    { prompt: "e4", square: "e4", answer: "e4", notation: true },
+                ],
+            },
+            {
+                title: "Pawn",
+                text: "Pawns move forward one square. From their starting square, they can move either one or two squares.",
+                note: "The pawn can move to e3 or e4. This lesson asks for e4.",
+                action: "Move e4: pawn to e4.",
+                completeText: "Good. e4 means pawn to e4.",
+                chat: "Pawns are small, but they decide who controls the middle.",
+                from: "e2",
+                targetMove: "e2e4",
+                moves: ["e2e3", "e2e4"],
+                pieces: startingPieces,
+                highlights: [
+                    { square: "e2", type: "source", label: "P" },
+                    { square: "e4", type: "target", label: "★" },
+                ],
+            },
+            {
+                title: "Pawn Capture",
+                text: "Pawns move forward, but they capture one square diagonally.",
+                note: "The pawn can capture on either diagonal. This lesson asks for d5.",
+                action: "Move exd5: pawn captures on d5.",
+                completeText: "Nice. Pawns capture diagonally, not straight forward.",
+                chat: "This is the first rule that catches new players: pawns walk forward but fight diagonally.",
+                from: "e4",
+                targetMove: "e4d5",
+                moves: ["e4d5", "e4f5"],
+                pieces: [
+                    { square: "g1", piece: "wk" },
+                    { square: "d1", piece: "wq" },
+                    { square: "a1", piece: "wr" },
+                    { square: "h1", piece: "wr" },
+                    { square: "c1", piece: "wb" },
+                    { square: "f1", piece: "wb" },
+                    { square: "b1", piece: "wn" },
+                    { square: "g3", piece: "wn" },
+                    { square: "a2", piece: "wp" },
+                    { square: "b2", piece: "wp" },
+                    { square: "c2", piece: "wp" },
+                    { square: "d3", piece: "wp" },
+                    { square: "e4", piece: "wp" },
+                    { square: "f2", piece: "wp" },
+                    { square: "g2", piece: "wp" },
+                    { square: "h2", piece: "wp" },
+                    { square: "e8", piece: "bk" },
+                    { square: "d8", piece: "bq" },
+                    { square: "a8", piece: "br" },
+                    { square: "h8", piece: "br" },
+                    { square: "c8", piece: "bb" },
+                    { square: "f8", piece: "bb" },
+                    { square: "b8", piece: "bn" },
+                    { square: "g8", piece: "bn" },
+                    { square: "a7", piece: "bp" },
+                    { square: "b7", piece: "bp" },
+                    { square: "c7", piece: "bp" },
+                    { square: "d5", piece: "bp" },
+                    { square: "e6", piece: "bp" },
+                    { square: "f5", piece: "bp" },
+                    { square: "g7", piece: "bp" },
+                    { square: "h7", piece: "bp" },
+                ],
+                highlights: [
+                    { square: "e4", type: "source", label: "P" },
+                    { square: "d5", type: "target", label: "★" },
+                ],
+            },
+            {
+                title: "Knight",
+                text: "Knights move in an L shape: two squares one way and one square across.",
+                note: "This board is opened up so you can see the full knight pattern. This lesson asks for Nf5.",
+                action: "Move Nf5: knight to f5.",
+                completeText: "Nice. From the centre, a knight can reach eight different squares.",
+                chat: "Knights are strongest near the centre because they control more squares and can jump over traffic.",
+                from: "d4",
+                targetMove: "d4f5",
+                moves: ["d4b3", "d4b5", "d4c2", "d4c6", "d4e2", "d4e6", "d4f3", "d4f5"],
+                pieces: [
+                    { square: "g1", piece: "wk" },
+                    { square: "d1", piece: "wq" },
+                    { square: "a1", piece: "wr" },
+                    { square: "h1", piece: "wr" },
+                    { square: "c1", piece: "wb" },
+                    { square: "h3", piece: "wb" },
+                    { square: "d4", piece: "wn" },
+                    { square: "a2", piece: "wp" },
+                    { square: "d3", piece: "wp" },
+                    { square: "g2", piece: "wp" },
+                    { square: "h2", piece: "wp" },
+                    { square: "e8", piece: "bk" },
+                    { square: "d8", piece: "bq" },
+                    { square: "a8", piece: "br" },
+                    { square: "h8", piece: "br" },
+                    { square: "c8", piece: "bb" },
+                    { square: "f8", piece: "bb" },
+                    { square: "a7", piece: "bp" },
+                    { square: "b7", piece: "bp" },
+                    { square: "d6", piece: "bp" },
+                    { square: "e5", piece: "bp" },
+                    { square: "g7", piece: "bp" },
+                    { square: "h7", piece: "bp" },
+                ],
+                highlights: ["b3", "b5", "c2", "c6", "e2", "e6", "f3", "f5"].map((square) => ({
+                    square,
+                    type: square === "f5" ? "target" : "path",
+                    label: square === "f5" ? "★" : "",
+                })).concat([{ square: "d4", type: "source", label: "N" }]),
+            },
+            {
+                title: "Bishop",
+                text: "Bishops move diagonally across any number of open squares.",
+                note: "Bishops work best when the diagonal is open. This lesson asks for Bg5.",
+                action: "Move Bg5: bishop to g5.",
+                completeText: "Good diagonal movement. That bishop is active now.",
+                chat: "Bishops love open diagonals. Open the line, then let them work.",
+                from: "c1",
+                targetMove: "c1g5",
+                moves: ["c1d2", "c1e3", "c1f4", "c1g5", "c1h6"],
+                pieces: [
+                    { square: "e1", piece: "wk" },
+                    { square: "d1", piece: "wq" },
+                    { square: "a1", piece: "wr" },
+                    { square: "h1", piece: "wr" },
+                    { square: "c1", piece: "wb" },
+                    { square: "f1", piece: "wb" },
+                    { square: "b1", piece: "wn" },
+                    { square: "g1", piece: "wn" },
+                    { square: "a2", piece: "wp" },
+                    { square: "b2", piece: "wp" },
+                    { square: "c2", piece: "wp" },
+                    { square: "d3", piece: "wp" },
+                    { square: "e4", piece: "wp" },
+                    { square: "f2", piece: "wp" },
+                    { square: "g2", piece: "wp" },
+                    { square: "h2", piece: "wp" },
+                    { square: "e8", piece: "bk" },
+                    { square: "d8", piece: "bq" },
+                    { square: "a8", piece: "br" },
+                    { square: "h8", piece: "br" },
+                    { square: "c8", piece: "bb" },
+                    { square: "f8", piece: "bb" },
+                    { square: "b8", piece: "bn" },
+                    { square: "g8", piece: "bn" },
+                    { square: "a7", piece: "bp" },
+                    { square: "b7", piece: "bp" },
+                    { square: "c7", piece: "bp" },
+                    { square: "d6", piece: "bp" },
+                    { square: "e5", piece: "bp" },
+                    { square: "f7", piece: "bp" },
+                    { square: "g7", piece: "bp" },
+                    { square: "h7", piece: "bp" },
+                ],
+                highlights: ["c1", "d2", "e3", "f4", "g5", "h6"].map((square) => ({
+                    square,
+                    type: square === "c1" ? "source" : square === "g5" ? "target" : "path",
+                    label: square === "c1" ? "B" : square === "g5" ? "★" : "",
+                })),
+            },
+            {
+                title: "Rook",
+                text: "Rooks move horizontally or vertically across open files and ranks.",
+                note: "Rooks are powerful on open lines. This lesson asks for Ra4.",
+                action: "Move Ra4: rook to a4.",
+                completeText: "Correct. Ra4 means rook to a4.",
+                chat: "Rooks are simple but brutal: straight lines, open files, no nonsense.",
+                from: "a1",
+                targetMove: "a1a4",
+                moves: ["a1a2", "a1a3", "a1a4", "a1a5", "a1a6", "a1a7", "a1a8", "a1b1", "a1c1", "a1d1"],
+                pieces: [
+                    { square: "g1", piece: "wk" },
+                    { square: "d1", piece: "wq" },
+                    { square: "a1", piece: "wr" },
+                    { square: "h1", piece: "wr" },
+                    { square: "c1", piece: "wb" },
+                    { square: "f1", piece: "wb" },
+                    { square: "c3", piece: "wn" },
+                    { square: "f3", piece: "wn" },
+                    { square: "b2", piece: "wp" },
+                    { square: "c2", piece: "wp" },
+                    { square: "d3", piece: "wp" },
+                    { square: "e4", piece: "wp" },
+                    { square: "f2", piece: "wp" },
+                    { square: "g2", piece: "wp" },
+                    { square: "h2", piece: "wp" },
+                    { square: "e8", piece: "bk" },
+                    { square: "d8", piece: "bq" },
+                    { square: "h8", piece: "br" },
+                    { square: "c8", piece: "bb" },
+                    { square: "f8", piece: "bb" },
+                    { square: "b8", piece: "bn" },
+                    { square: "g8", piece: "bn" },
+                    { square: "b7", piece: "bp" },
+                    { square: "c7", piece: "bp" },
+                    { square: "d6", piece: "bp" },
+                    { square: "e5", piece: "bp" },
+                    { square: "f7", piece: "bp" },
+                    { square: "g7", piece: "bp" },
+                    { square: "h7", piece: "bp" },
+                ],
+                highlights: ["a1", "a2", "a3", "a4", "a5", "a6", "a7", "a8"].map((square) => ({
+                    square,
+                    type: square === "a1" ? "source" : square === "a4" ? "target" : "path",
+                    label: square === "a1" ? "R" : square === "a4" ? "★" : "",
+                })),
+            },
+            {
+                title: "Queen",
+                text: "The queen combines rook and bishop movement, so it moves straight and diagonally.",
+                note: "The queen is powerful, but do not bring it out too early without a reason. This lesson asks for Qh5.",
+                action: "Move Qh5: queen to h5.",
+                completeText: "Correct. Qh5 means queen to h5.",
+                chat: "The queen is your strongest piece. Use it with a plan, not only because it looks scary.",
+                from: "d1",
+                targetMove: "d1h5",
+                moves: [
+                    "d1d2", "d1e2", "d1f3", "d1g4", "d1h5",
+                ],
+                pieces: [
+                    { square: "e1", piece: "wk" },
+                    { square: "d1", piece: "wq" },
+                    { square: "a1", piece: "wr" },
+                    { square: "h1", piece: "wr" },
+                    { square: "c1", piece: "wb" },
+                    { square: "f1", piece: "wb" },
+                    { square: "b1", piece: "wn" },
+                    { square: "g1", piece: "wn" },
+                    { square: "a2", piece: "wp" },
+                    { square: "b2", piece: "wp" },
+                    { square: "c2", piece: "wp" },
+                    { square: "d3", piece: "wp" },
+                    { square: "e4", piece: "wp" },
+                    { square: "f2", piece: "wp" },
+                    { square: "g2", piece: "wp" },
+                    { square: "h2", piece: "wp" },
+                    { square: "e8", piece: "bk" },
+                    { square: "d8", piece: "bq" },
+                    { square: "a8", piece: "br" },
+                    { square: "h8", piece: "br" },
+                    { square: "c8", piece: "bb" },
+                    { square: "f8", piece: "bb" },
+                    { square: "b8", piece: "bn" },
+                    { square: "g8", piece: "bn" },
+                    { square: "a7", piece: "bp" },
+                    { square: "b7", piece: "bp" },
+                    { square: "c7", piece: "bp" },
+                    { square: "d6", piece: "bp" },
+                    { square: "e5", piece: "bp" },
+                    { square: "f7", piece: "bp" },
+                    { square: "g7", piece: "bp" },
+                    { square: "h7", piece: "bp" },
+                ],
+                highlights: ["d1", "d2", "e2", "f3", "g4", "h5"].map((square) => ({
+                    square,
+                    type: square === "d1" ? "source" : square === "h5" ? "target" : "path",
+                    label: square === "d1" ? "Q" : square === "h5" ? "★" : "",
+                })),
+            },
+            {
+                title: "King",
+                text: "The king moves one square in any direction and must never stay in check.",
+                note: "The king is the piece you must protect. This lesson asks for Ke2.",
+                action: "Move Ke2: king to e2.",
+                completeText: "Good. Ke2 means king to e2.",
+                chat: "The king is slow, but the whole game is about keeping it alive.",
+                from: "e1",
+                targetMove: "e1e2",
+                moves: ["e1d1", "e1d2", "e1e2", "e1f2", "e1f1"],
+                pieces: [
+                    { square: "e1", piece: "wk" },
+                    { square: "d1", piece: "wq" },
+                    { square: "a1", piece: "wr" },
+                    { square: "h1", piece: "wr" },
+                    { square: "c4", piece: "wb" },
+                    { square: "g2", piece: "wb" },
+                    { square: "c3", piece: "wn" },
+                    { square: "f3", piece: "wn" },
+                    { square: "a2", piece: "wp" },
+                    { square: "b2", piece: "wp" },
+                    { square: "c2", piece: "wp" },
+                    { square: "d3", piece: "wp" },
+                    { square: "e4", piece: "wp" },
+                    { square: "g3", piece: "wp" },
+                    { square: "h2", piece: "wp" },
+                    { square: "e8", piece: "bk" },
+                    { square: "d8", piece: "bq" },
+                    { square: "a8", piece: "br" },
+                    { square: "h8", piece: "br" },
+                    { square: "c8", piece: "bb" },
+                    { square: "g7", piece: "bb" },
+                    { square: "b8", piece: "bn" },
+                    { square: "f6", piece: "bn" },
+                    { square: "a7", piece: "bp" },
+                    { square: "b7", piece: "bp" },
+                    { square: "c7", piece: "bp" },
+                    { square: "d6", piece: "bp" },
+                    { square: "e5", piece: "bp" },
+                    { square: "f7", piece: "bp" },
+                    { square: "g6", piece: "bp" },
+                    { square: "h7", piece: "bp" },
+                ],
+                highlights: ["d1", "d2", "e2", "f2", "f1"].map((square) => ({
+                    square,
+                    type: square === "e2" ? "target" : "path",
+                    label: square === "e2" ? "★" : "",
+                })).concat([{ square: "e1", type: "source", label: "K" }]),
+            },
+            {
+                title: "Castling",
+                text: "Castling is a special king move. The king moves two squares and the rook jumps beside it.",
+                note: "You can only castle if neither piece has moved, the path is clear, and the king does not castle through check.",
+                action: "Castle king side by moving the king from e1 to g1.",
+                completeText: "Correct. The king is safer and the rook is closer to the centre.",
+                chat: "Castling is usually how you get the king out of the middle before the board opens up.",
+                from: "e1",
+                to: "g1",
+                move: "e1g1",
+                pieces: [
+                    { square: "e1", piece: "wk" },
+                    { square: "h1", piece: "wr" },
+                    { square: "a1", piece: "wr" },
+                    { square: "d1", piece: "wq" },
+                    { square: "c1", piece: "wb" },
+                    { square: "b1", piece: "wn" },
+                    { square: "c3", piece: "wn" },
+                    { square: "a2", piece: "wp" },
+                    { square: "b2", piece: "wp" },
+                    { square: "c2", piece: "wp" },
+                    { square: "d3", piece: "wp" },
+                    { square: "e4", piece: "wp" },
+                    { square: "f2", piece: "wp" },
+                    { square: "g2", piece: "wp" },
+                    { square: "h2", piece: "wp" },
+                    { square: "e8", piece: "bk" },
+                    { square: "d8", piece: "bq" },
+                    { square: "a8", piece: "br" },
+                    { square: "h8", piece: "br" },
+                    { square: "c8", piece: "bb" },
+                    { square: "f8", piece: "bb" },
+                    { square: "b8", piece: "bn" },
+                    { square: "g8", piece: "bn" },
+                    { square: "a7", piece: "bp" },
+                    { square: "b7", piece: "bp" },
+                    { square: "c7", piece: "bp" },
+                    { square: "d6", piece: "bp" },
+                    { square: "e5", piece: "bp" },
+                    { square: "f7", piece: "bp" },
+                    { square: "g7", piece: "bp" },
+                    { square: "h7", piece: "bp" },
+                ],
+                resultPieces: [
+                    { square: "g1", piece: "wk" },
+                    { square: "f1", piece: "wr" },
+                    { square: "a1", piece: "wr" },
+                    { square: "d1", piece: "wq" },
+                    { square: "c1", piece: "wb" },
+                    { square: "b1", piece: "wn" },
+                    { square: "c3", piece: "wn" },
+                    { square: "a2", piece: "wp" },
+                    { square: "b2", piece: "wp" },
+                    { square: "c2", piece: "wp" },
+                    { square: "d3", piece: "wp" },
+                    { square: "e4", piece: "wp" },
+                    { square: "f2", piece: "wp" },
+                    { square: "g2", piece: "wp" },
+                    { square: "h2", piece: "wp" },
+                    { square: "e8", piece: "bk" },
+                    { square: "d8", piece: "bq" },
+                    { square: "a8", piece: "br" },
+                    { square: "h8", piece: "br" },
+                    { square: "c8", piece: "bb" },
+                    { square: "f8", piece: "bb" },
+                    { square: "b8", piece: "bn" },
+                    { square: "g8", piece: "bn" },
+                    { square: "a7", piece: "bp" },
+                    { square: "b7", piece: "bp" },
+                    { square: "c7", piece: "bp" },
+                    { square: "d6", piece: "bp" },
+                    { square: "e5", piece: "bp" },
+                    { square: "f7", piece: "bp" },
+                    { square: "g7", piece: "bp" },
+                    { square: "h7", piece: "bp" },
+                ],
+                highlights: [
+                    { square: "e1", type: "source", label: "K" },
+                    { square: "h1", type: "path", label: "R" },
+                    { square: "f1", type: "path", label: "R" },
+                    { square: "g1", type: "target", label: "★" },
+                ],
+            },
+            {
+                title: "En Passant",
+                text: "En passant is a special pawn capture after an enemy pawn moves two squares beside your pawn.",
+                note: "It only works immediately on the next move. You capture as if the pawn moved one square.",
+                action: "Move the pawn from e5 to d6.",
+                completeText: "Correct. The pawn on d5 is captured even though your pawn lands on d6.",
+                chat: "This is the sneaky rule. It looks illegal until you know the story behind it.",
+                from: "e5",
+                to: "d6",
+                move: "e5d6",
+                pieces: [
+                    { square: "g1", piece: "wk" },
+                    { square: "d1", piece: "wq" },
+                    { square: "a1", piece: "wr" },
+                    { square: "h1", piece: "wr" },
+                    { square: "c1", piece: "wb" },
+                    { square: "g2", piece: "wb" },
+                    { square: "c3", piece: "wn" },
+                    { square: "f3", piece: "wn" },
+                    { square: "a2", piece: "wp" },
+                    { square: "b2", piece: "wp" },
+                    { square: "c2", piece: "wp" },
+                    { square: "d4", piece: "wp" },
+                    { square: "e5", piece: "wp" },
+                    { square: "f2", piece: "wp" },
+                    { square: "g3", piece: "wp" },
+                    { square: "h2", piece: "wp" },
+                    { square: "g8", piece: "bk" },
+                    { square: "d8", piece: "bq" },
+                    { square: "a8", piece: "br" },
+                    { square: "h8", piece: "br" },
+                    { square: "c8", piece: "bb" },
+                    { square: "g7", piece: "bb" },
+                    { square: "b8", piece: "bn" },
+                    { square: "f6", piece: "bn" },
+                    { square: "a7", piece: "bp" },
+                    { square: "b7", piece: "bp" },
+                    { square: "c7", piece: "bp" },
+                    { square: "d5", piece: "bp" },
+                    { square: "e6", piece: "bp" },
+                    { square: "f7", piece: "bp" },
+                    { square: "g6", piece: "bp" },
+                    { square: "h7", piece: "bp" },
+                ],
+                resultPieces: [
+                    { square: "g1", piece: "wk" },
+                    { square: "d1", piece: "wq" },
+                    { square: "a1", piece: "wr" },
+                    { square: "h1", piece: "wr" },
+                    { square: "c1", piece: "wb" },
+                    { square: "g2", piece: "wb" },
+                    { square: "c3", piece: "wn" },
+                    { square: "f3", piece: "wn" },
+                    { square: "a2", piece: "wp" },
+                    { square: "b2", piece: "wp" },
+                    { square: "c2", piece: "wp" },
+                    { square: "d4", piece: "wp" },
+                    { square: "d6", piece: "wp" },
+                    { square: "f2", piece: "wp" },
+                    { square: "g3", piece: "wp" },
+                    { square: "h2", piece: "wp" },
+                    { square: "g8", piece: "bk" },
+                    { square: "d8", piece: "bq" },
+                    { square: "a8", piece: "br" },
+                    { square: "h8", piece: "br" },
+                    { square: "c8", piece: "bb" },
+                    { square: "g7", piece: "bb" },
+                    { square: "b8", piece: "bn" },
+                    { square: "f6", piece: "bn" },
+                    { square: "a7", piece: "bp" },
+                    { square: "b7", piece: "bp" },
+                    { square: "c7", piece: "bp" },
+                    { square: "e6", piece: "bp" },
+                    { square: "f7", piece: "bp" },
+                    { square: "g6", piece: "bp" },
+                    { square: "h7", piece: "bp" },
+                ],
+                highlights: [
+                    { square: "e5", type: "source", label: "P" },
+                    { square: "d5", type: "danger", label: "Captured" },
+                    { square: "d6", type: "target", label: "★" },
+                ],
+            },
+            {
+                title: "Promotion",
+                text: "When a pawn reaches the final rank, it promotes into a stronger piece.",
+                note: "You can promote to a queen, rook, bishop or knight. For this lesson, choose queen.",
+                action: "Move the pawn from e7 to e8, then promote to a queen.",
+                completeText: "Correct. You chose queen, which is the strongest promotion in most positions.",
+                chat: "Promotion is the reward for getting a pawn all the way through the board. Move to e8, then choose queen.",
+                from: "e7",
+                to: "e8",
+                targetMove: "e7e8q",
+                moves: ["e7e8q", "e7e8r", "e7e8b", "e7e8n"],
+                pieces: [
+                    { square: "f4", piece: "wk" },
+                    { square: "a1", piece: "wr" },
+                    { square: "c4", piece: "wb" },
+                    { square: "f5", piece: "wn" },
+                    { square: "a5", piece: "wp" },
+                    { square: "b2", piece: "wp" },
+                    { square: "e7", piece: "wp" },
+                    { square: "h5", piece: "wp" },
+                    { square: "h8", piece: "bk" },
+                    { square: "a6", piece: "br" },
+                    { square: "g7", piece: "bb" },
+                    { square: "c6", piece: "bn" },
+                    { square: "a7", piece: "bp" },
+                    { square: "b6", piece: "bp" },
+                    { square: "c7", piece: "bp" },
+                    { square: "h7", piece: "bp" },
+                ],
+                resultPieces: [
+                    { square: "f4", piece: "wk" },
+                    { square: "a1", piece: "wr" },
+                    { square: "c4", piece: "wb" },
+                    { square: "f5", piece: "wn" },
+                    { square: "a5", piece: "wp" },
+                    { square: "b2", piece: "wp" },
+                    { square: "e8", piece: "wq" },
+                    { square: "h5", piece: "wp" },
+                    { square: "h8", piece: "bk" },
+                    { square: "a6", piece: "br" },
+                    { square: "g7", piece: "bb" },
+                    { square: "c6", piece: "bn" },
+                    { square: "a7", piece: "bp" },
+                    { square: "b6", piece: "bp" },
+                    { square: "c7", piece: "bp" },
+                    { square: "h7", piece: "bp" },
+                ],
+                highlights: [
+                    { square: "e7", type: "source", label: "P" },
+                    { square: "e8", type: "target", label: "★" },
+                ],
+            },
+            {
+                title: "Check",
+                text: "Check means the king is under attack. The player in check must respond immediately.",
+                note: "A check can be escaped by moving the king, blocking the attack, or capturing the attacking piece.",
+                action: "Move Bb5+: bishop to b5, giving check.",
+                completeText: "Correct. Bb5+ gives check because the bishop attacks the king along the diagonal.",
+                chat: "Check is a warning, not the end of the game. The king is attacked, so the opponent must fix it on the next move.",
+                from: "c4",
+                to: "b5",
+                move: "c4b5",
+                pieces: [
+                    { square: "e1", piece: "wk" },
+                    { square: "d1", piece: "wq" },
+                    { square: "a1", piece: "wr" },
+                    { square: "h1", piece: "wr" },
+                    { square: "c4", piece: "wb" },
+                    { square: "g2", piece: "wb" },
+                    { square: "c3", piece: "wn" },
+                    { square: "f3", piece: "wn" },
+                    { square: "a2", piece: "wp" },
+                    { square: "b2", piece: "wp" },
+                    { square: "c2", piece: "wp" },
+                    { square: "d3", piece: "wp" },
+                    { square: "e4", piece: "wp" },
+                    { square: "f2", piece: "wp" },
+                    { square: "g3", piece: "wp" },
+                    { square: "h2", piece: "wp" },
+                    { square: "e8", piece: "bk" },
+                    { square: "d8", piece: "bq" },
+                    { square: "a8", piece: "br" },
+                    { square: "h8", piece: "br" },
+                    { square: "c8", piece: "bb" },
+                    { square: "g7", piece: "bb" },
+                    { square: "b8", piece: "bn" },
+                    { square: "f6", piece: "bn" },
+                    { square: "a7", piece: "bp" },
+                    { square: "b7", piece: "bp" },
+                    { square: "c7", piece: "bp" },
+                    { square: "d6", piece: "bp" },
+                    { square: "e5", piece: "bp" },
+                    { square: "f7", piece: "bp" },
+                    { square: "g6", piece: "bp" },
+                    { square: "h7", piece: "bp" },
+                ],
+                resultPieces: [
+                    { square: "e1", piece: "wk" },
+                    { square: "d1", piece: "wq" },
+                    { square: "a1", piece: "wr" },
+                    { square: "h1", piece: "wr" },
+                    { square: "b5", piece: "wb" },
+                    { square: "g2", piece: "wb" },
+                    { square: "c3", piece: "wn" },
+                    { square: "f3", piece: "wn" },
+                    { square: "a2", piece: "wp" },
+                    { square: "b2", piece: "wp" },
+                    { square: "c2", piece: "wp" },
+                    { square: "d3", piece: "wp" },
+                    { square: "e4", piece: "wp" },
+                    { square: "f2", piece: "wp" },
+                    { square: "g3", piece: "wp" },
+                    { square: "h2", piece: "wp" },
+                    { square: "e8", piece: "bk" },
+                    { square: "d8", piece: "bq" },
+                    { square: "a8", piece: "br" },
+                    { square: "h8", piece: "br" },
+                    { square: "c8", piece: "bb" },
+                    { square: "g7", piece: "bb" },
+                    { square: "b8", piece: "bn" },
+                    { square: "f6", piece: "bn" },
+                    { square: "a7", piece: "bp" },
+                    { square: "b7", piece: "bp" },
+                    { square: "c7", piece: "bp" },
+                    { square: "d6", piece: "bp" },
+                    { square: "e5", piece: "bp" },
+                    { square: "f7", piece: "bp" },
+                    { square: "g6", piece: "bp" },
+                    { square: "h7", piece: "bp" },
+                ],
+                highlights: [
+                    { square: "c4", type: "source", label: "B" },
+                    { square: "b5", type: "target", label: "★" },
+                    { square: "c6", type: "path", label: "" },
+                    { square: "d7", type: "path", label: "" },
+                    { square: "e8", type: "danger", label: "King" },
+                ],
+            },
+            {
+                title: "Discovered Check",
+                text: "A discovered check happens when one piece moves away and reveals an attack from another piece.",
+                note: "Here the bishop moves off the e-file, uncovering the rook's line to the black king.",
+                action: "Move Bg4+: bishop to g4, revealing check from the rook.",
+                completeText: "Correct. The bishop moved, and the rook on e1 now checks the king on e8.",
+                chat: "Discovered checks are powerful because the moving piece can create one threat while another piece gives check.",
+                from: "e2",
+                to: "g4",
+                move: "e2g4",
+                pieces: [
+                    { square: "g1", piece: "wk" },
+                    { square: "d1", piece: "wq" },
+                    { square: "e1", piece: "wr" },
+                    { square: "a1", piece: "wr" },
+                    { square: "e2", piece: "wb" },
+                    { square: "c4", piece: "wb" },
+                    { square: "c3", piece: "wn" },
+                    { square: "b1", piece: "wn" },
+                    { square: "a2", piece: "wp" },
+                    { square: "b2", piece: "wp" },
+                    { square: "c2", piece: "wp" },
+                    { square: "d3", piece: "wp" },
+                    { square: "f2", piece: "wp" },
+                    { square: "g3", piece: "wp" },
+                    { square: "h2", piece: "wp" },
+                    { square: "e8", piece: "bk" },
+                    { square: "d8", piece: "bq" },
+                    { square: "a8", piece: "br" },
+                    { square: "h8", piece: "br" },
+                    { square: "c8", piece: "bb" },
+                    { square: "g7", piece: "bb" },
+                    { square: "b8", piece: "bn" },
+                    { square: "f6", piece: "bn" },
+                    { square: "a7", piece: "bp" },
+                    { square: "b7", piece: "bp" },
+                    { square: "c7", piece: "bp" },
+                    { square: "d6", piece: "bp" },
+                    { square: "f7", piece: "bp" },
+                    { square: "g6", piece: "bp" },
+                    { square: "h7", piece: "bp" },
+                ],
+                resultPieces: [
+                    { square: "g1", piece: "wk" },
+                    { square: "d1", piece: "wq" },
+                    { square: "e1", piece: "wr" },
+                    { square: "a1", piece: "wr" },
+                    { square: "g4", piece: "wb" },
+                    { square: "c4", piece: "wb" },
+                    { square: "c3", piece: "wn" },
+                    { square: "b1", piece: "wn" },
+                    { square: "a2", piece: "wp" },
+                    { square: "b2", piece: "wp" },
+                    { square: "c2", piece: "wp" },
+                    { square: "d3", piece: "wp" },
+                    { square: "f2", piece: "wp" },
+                    { square: "g3", piece: "wp" },
+                    { square: "h2", piece: "wp" },
+                    { square: "e8", piece: "bk" },
+                    { square: "d8", piece: "bq" },
+                    { square: "a8", piece: "br" },
+                    { square: "h8", piece: "br" },
+                    { square: "c8", piece: "bb" },
+                    { square: "g7", piece: "bb" },
+                    { square: "b8", piece: "bn" },
+                    { square: "f6", piece: "bn" },
+                    { square: "a7", piece: "bp" },
+                    { square: "b7", piece: "bp" },
+                    { square: "c7", piece: "bp" },
+                    { square: "d6", piece: "bp" },
+                    { square: "f7", piece: "bp" },
+                    { square: "g6", piece: "bp" },
+                    { square: "h7", piece: "bp" },
+                ],
+                highlights: [
+                    { square: "e2", type: "source", label: "B" },
+                    { square: "g4", type: "target", label: "★" },
+                    { square: "e1", type: "path", label: "Rook" },
+                    { square: "e3", type: "path", label: "" },
+                    { square: "e4", type: "path", label: "" },
+                    { square: "e5", type: "path", label: "" },
+                    { square: "e6", type: "path", label: "" },
+                    { square: "e7", type: "path", label: "" },
+                    { square: "e8", type: "danger", label: "King" },
+                ],
+            },
+            {
+                title: "Draws",
+                type: "reading",
+                text: "Not every game has a winner. A draw means the game ends equal.",
+                note: "Common draws: stalemate, threefold repetition, the fifty-move rule, agreement, or not enough material to checkmate.",
+                action: "Read the draw rules, then press ★.",
+                completeText: "Good. Draws matter because sometimes the best result is saving a losing position.",
+                chat: "A draw is not a loss. Stalemate is the big one for beginners: the player has no legal move, but their king is not in check.",
+                pieces: [
+                    { square: "h8", piece: "bk" },
+                    { square: "f7", piece: "wq" },
+                    { square: "g6", piece: "wk" },
+                ],
+                highlights: [
+                    { square: "h8", type: "source", label: "King" },
+                    { square: "f7", type: "path", label: "Queen" },
+                    { square: "g6", type: "path", label: "King" },
+                ],
+                readingRules: [
+                    "Stalemate: no legal moves, but the king is not in check.",
+                    "Threefold repetition: the same position happens three times.",
+                    "Fifty-move rule: fifty moves by each side with no pawn move or capture.",
+                    "Insufficient material: neither side has enough pieces to force checkmate.",
+                    "Agreement: both players agree the position should be drawn.",
+                ],
+            },
+            {
+                title: "Checkmate: Queen Support",
+                text: "Checkmate is how you win chess. It means the king is in check and there is no legal way to escape.",
+                note: "To escape check, the opponent must move the king, block the attack, or capture the attacker. In checkmate, none of those work.",
+                action: "Move Qxf7: queen captures on f7 for checkmate.",
+                completeText: "Correct. That is checkmate: the black king is attacked, cannot capture the queen, cannot block, and has no safe square.",
+                chat: "This is the win condition. You do not win by taking the king; you win by trapping it so it cannot legally escape.",
+                from: "h5",
+                to: "f7",
+                move: "h5f7",
+                pieces: [
+                    { square: "e8", piece: "bk" },
+                    { square: "e1", piece: "wk" },
+                    { square: "a1", piece: "wr" },
+                    { square: "h1", piece: "wr" },
+                    { square: "h5", piece: "wq" },
+                    { square: "c4", piece: "wb" },
+                    { square: "c3", piece: "wn" },
+                    { square: "f3", piece: "wn" },
+                    { square: "a2", piece: "wp" },
+                    { square: "b2", piece: "wp" },
+                    { square: "c2", piece: "wp" },
+                    { square: "d3", piece: "wp" },
+                    { square: "e4", piece: "wp" },
+                    { square: "f2", piece: "wp" },
+                    { square: "g2", piece: "wp" },
+                    { square: "h2", piece: "wp" },
+                    { square: "d8", piece: "bq" },
+                    { square: "a8", piece: "br" },
+                    { square: "h8", piece: "br" },
+                    { square: "c8", piece: "bb" },
+                    { square: "f8", piece: "bb" },
+                    { square: "b8", piece: "bn" },
+                    { square: "g8", piece: "bn" },
+                    { square: "a7", piece: "bp" },
+                    { square: "b7", piece: "bp" },
+                    { square: "c7", piece: "bp" },
+                    { square: "d7", piece: "bp" },
+                    { square: "e5", piece: "bp" },
+                    { square: "f7", piece: "bp" },
+                    { square: "g7", piece: "bp" },
+                    { square: "h7", piece: "bp" },
+                ],
+                resultPieces: [
+                    { square: "e8", piece: "bk" },
+                    { square: "e1", piece: "wk" },
+                    { square: "a1", piece: "wr" },
+                    { square: "h1", piece: "wr" },
+                    { square: "f7", piece: "wq" },
+                    { square: "c4", piece: "wb" },
+                    { square: "c3", piece: "wn" },
+                    { square: "f3", piece: "wn" },
+                    { square: "a2", piece: "wp" },
+                    { square: "b2", piece: "wp" },
+                    { square: "c2", piece: "wp" },
+                    { square: "d3", piece: "wp" },
+                    { square: "e4", piece: "wp" },
+                    { square: "f2", piece: "wp" },
+                    { square: "g2", piece: "wp" },
+                    { square: "h2", piece: "wp" },
+                    { square: "d8", piece: "bq" },
+                    { square: "a8", piece: "br" },
+                    { square: "h8", piece: "br" },
+                    { square: "c8", piece: "bb" },
+                    { square: "f8", piece: "bb" },
+                    { square: "b8", piece: "bn" },
+                    { square: "g8", piece: "bn" },
+                    { square: "a7", piece: "bp" },
+                    { square: "b7", piece: "bp" },
+                    { square: "c7", piece: "bp" },
+                    { square: "d7", piece: "bp" },
+                    { square: "e5", piece: "bp" },
+                    { square: "g7", piece: "bp" },
+                    { square: "h7", piece: "bp" },
+                ],
+                highlights: [
+                    { square: "e8", type: "danger", label: "King" },
+                    { square: "f7", type: "target", label: "★" },
+                    { square: "h5", type: "source", label: "Q" },
+                    { square: "c4", type: "path", label: "Support" },
+                ],
+                readingRules: [
+                    "Queen support: the queen attacks, and another piece protects the queen.",
+                    "Back rank: a rook can checkmate when the king's own pieces block its escape squares.",
+                    "Discovered attacks: one piece moves away and opens a stronger line behind it.",
+                    "The king is never actually taken. Checkmate ends the game immediately.",
+                ],
+            },
+            {
+                title: "Checkmate: Back Rank",
+                text: "A back-rank checkmate happens when a king is trapped behind its own pieces.",
+                note: "The rook gives check along the back rank. The black pawns block the king's escape squares.",
+                action: "Move Re8#: rook to e8 for back-rank checkmate.",
+                completeText: "Correct. The rook controls the back rank, and the black king has no safe square.",
+                chat: "This is why king safety matters. If the back rank is blocked, one rook can finish the game.",
+                from: "e1",
+                to: "e8",
+                move: "e1e8",
+                pieces: [
+                    { square: "g1", piece: "wk" },
+                    { square: "d1", piece: "wq" },
+                    { square: "e1", piece: "wr" },
+                    { square: "a1", piece: "wr" },
+                    { square: "c4", piece: "wb" },
+                    { square: "c3", piece: "wn" },
+                    { square: "f3", piece: "wn" },
+                    { square: "a2", piece: "wp" },
+                    { square: "b2", piece: "wp" },
+                    { square: "c2", piece: "wp" },
+                    { square: "d3", piece: "wp" },
+                    { square: "f2", piece: "wp" },
+                    { square: "g2", piece: "wp" },
+                    { square: "h2", piece: "wp" },
+                    { square: "g8", piece: "bk" },
+                    { square: "a8", piece: "br" },
+                    { square: "h8", piece: "br" },
+                    { square: "c8", piece: "bb" },
+                    { square: "c6", piece: "bn" },
+                    { square: "a7", piece: "bp" },
+                    { square: "b7", piece: "bp" },
+                    { square: "c7", piece: "bp" },
+                    { square: "d6", piece: "bp" },
+                    { square: "f7", piece: "bp" },
+                    { square: "g7", piece: "bp" },
+                    { square: "h7", piece: "bp" },
+                ],
+                resultPieces: [
+                    { square: "g1", piece: "wk" },
+                    { square: "d1", piece: "wq" },
+                    { square: "e8", piece: "wr" },
+                    { square: "a1", piece: "wr" },
+                    { square: "c4", piece: "wb" },
+                    { square: "c3", piece: "wn" },
+                    { square: "f3", piece: "wn" },
+                    { square: "a2", piece: "wp" },
+                    { square: "b2", piece: "wp" },
+                    { square: "c2", piece: "wp" },
+                    { square: "d3", piece: "wp" },
+                    { square: "f2", piece: "wp" },
+                    { square: "g2", piece: "wp" },
+                    { square: "h2", piece: "wp" },
+                    { square: "g8", piece: "bk" },
+                    { square: "a8", piece: "br" },
+                    { square: "h8", piece: "br" },
+                    { square: "c8", piece: "bb" },
+                    { square: "c6", piece: "bn" },
+                    { square: "a7", piece: "bp" },
+                    { square: "b7", piece: "bp" },
+                    { square: "c7", piece: "bp" },
+                    { square: "d6", piece: "bp" },
+                    { square: "f7", piece: "bp" },
+                    { square: "g7", piece: "bp" },
+                    { square: "h7", piece: "bp" },
+                ],
+                highlights: [
+                    { square: "e1", type: "source", label: "R" },
+                    { square: "e8", type: "target", label: "★" },
+                    { square: "f8", type: "path", label: "" },
+                    { square: "g8", type: "danger", label: "King" },
+                    { square: "f7", type: "danger", label: "Blocked" },
+                    { square: "g7", type: "danger", label: "Blocked" },
+                    { square: "h7", type: "danger", label: "Blocked" },
+                ],
+            },
+        ];
+
+        const startUrl = "{% url 'tutor_start' tutor.slug %}";
+        const playerMoveUrl = "{% url 'tutor_move' tutor.slug %}";
+        const tutorReplyUrl = "{% url 'tutor_reply' tutor.slug %}";
+        const tutorUndoUrl = "{% url 'tutor_undo' tutor.slug %}";
+        const csrfToken = document.querySelector("[name=csrfmiddlewaretoken]").value;
+        const tutorVoiceGender = "{{ tutor.slug }}" === "serena-williams" ? "female" : "male";
+        const voiceStorageKey = `chessTutorVoiceName:${tutorVoiceGender}`;
+
+        const boardElement = document.getElementById("chess-board");
+        const primaryChatElement = document.getElementById("primary-chat");
+        const movePillElement = document.getElementById("move-pill");
+        const openingsButtonElement = document.getElementById("openings-button");
+        const openingOverlayElement = document.getElementById("opening-overlay");
+        const openingContentElement = document.getElementById("opening-content");
+        const openingCloseElement = document.getElementById("opening-close");
+        const feedbackTitleElement = document.getElementById("feedback-title");
+        const feedbackMessageElement = document.getElementById("feedback-message");
+        const feedbackMetaElement = document.getElementById("feedback-meta");
+        const playerMetaElement = document.getElementById("player-meta");
+        const evaluationFillElement = document.getElementById("eval-white");
+        const evaluationLabelElement = document.getElementById("eval-label");
+        const coachToolsElement = document.getElementById("coach-tools");
+        const coachStarterTipsElement = document.getElementById("coach-starter-tips");
+        const coachHintElement = document.getElementById("coach-hint");
+        const topCapturesElement = document.getElementById("top-captures");
+        const bottomCapturesElement = document.getElementById("bottom-captures");
+        const speakButtonElement = document.getElementById("speak-button");
+        const voiceSelectElement = document.getElementById("voice-select");
+        const autoSpeakToggleElement = document.getElementById("auto-speak-toggle");
+        const moveLogElement = document.getElementById("move-log");
+        const moveLogToggleElement = document.getElementById("move-log-toggle");
+        const undoButtonElement = document.getElementById("undo-button");
+        const statusElement = document.getElementById("position-label");
+        const errorElement = document.getElementById("move-error");
+        const setupOverlayElement = document.getElementById("setup-overlay");
+        const promotionOverlayElement = document.getElementById("promotion-overlay");
+        const promotionChoiceElement = document.getElementById("promotion-choice");
+
+        const initialGameState = JSON.parse(document.getElementById("initial-game-state").textContent);
+        let state = JSON.parse(JSON.stringify(initialGameState));
+        let selectedSquare = null;
+        let busy = false;
+        let showMoves = !isTutorialTutor;
+        let pendingPromotionMoves = [];
+        let audioContext = null;
+        let tutorialActive = isTutorialTutor;
+        let tutorialStepIndex = 0;
+        let tutorialStepSolved = false;
+        let tutorialSolvedMove = null;
+        let tutorialQuizIndex = 0;
+        let tutorialQuizAnswers = [];
+        const readingStepDelayMs = 5000;
+        let readingStepReadyAt = 0;
+        let readingStepTimer = null;
+        let availableVoices = [];
+        let initialAutoSpeechDone = false;
+
+        function boardFiles() {
+            return !tutorialActive && state.player_color === "black" ? [...files].reverse() : files;
+        }
+
+        function boardRanks() {
+            return !tutorialActive && state.player_color === "black" ? blackRanks : whiteRanks;
+        }
+
+        function playerPiecePrefix() {
+            return state.player_color === "black" ? "b" : "w";
+        }
+
+        function sleep(ms) {
+            return new Promise((resolve) => setTimeout(resolve, ms));
+        }
+
+        function currentTutorialStep() {
+            return tutorialSteps[tutorialStepIndex];
+        }
+
+        function currentReadingWaitMs() {
+            if (!tutorialActive || tutorialStepSolved || currentTutorialStep().type !== "reading") {
+                return 0;
+            }
+
+            return Math.max(0, readingStepReadyAt - Date.now());
+        }
+
+        function scheduleReadingStepTimer() {
+            if (readingStepTimer) {
+                clearTimeout(readingStepTimer);
+                readingStepTimer = null;
+            }
+
+            const waitMs = currentReadingWaitMs();
+
+            if (waitMs > 0) {
+                readingStepTimer = setTimeout(() => {
+                    readingStepTimer = null;
+                    render();
+                }, Math.min(waitMs, 1000) + 50);
+            }
+        }
+
+        function cloneState(nextState) {
+            return JSON.parse(JSON.stringify(nextState));
+        }
+
+        function openingGuideAvailable() {
+            return !tutorialActive && !state.awaiting_setup && Number(state.move_number || 1) <= 10;
+        }
+
+        function piecesAfterOpeningMoves(moves) {
+            const pieces = startingPieces.map((piece) => ({ ...piece }));
+
+            moves.forEach((move) => {
+                const fromSquare = move.slice(0, 2);
+                const toSquare = move.slice(2, 4);
+                const promotionPiece = move[4];
+                const movingIndex = pieces.findIndex((piece) => piece.square === fromSquare);
+
+                if (movingIndex < 0) {
+                    return;
+                }
+
+                const [movingPiece] = pieces.splice(movingIndex, 1);
+                const capturedIndex = pieces.findIndex((piece) => piece.square === toSquare);
+
+                if (capturedIndex >= 0) {
+                    pieces.splice(capturedIndex, 1);
+                }
+
+                pieces.push({
+                    square: toSquare,
+                    piece: promotionPiece ? `${movingPiece.piece[0]}${promotionPiece}` : movingPiece.piece,
+                });
+            });
+
+            return pieces;
+        }
+
+        function applyOpeningMoveToPieces(pieces, move) {
+            const fromSquare = move.slice(0, 2);
+            const toSquare = move.slice(2, 4);
+            const promotionPiece = move[4];
+            const movingIndex = pieces.findIndex((piece) => piece.square === fromSquare);
+
+            if (movingIndex < 0) {
+                return null;
+            }
+
+            const [movingPiece] = pieces.splice(movingIndex, 1);
+            const capturedIndex = pieces.findIndex((piece) => piece.square === toSquare);
+
+            if (capturedIndex >= 0) {
+                pieces.splice(capturedIndex, 1);
+            }
+
+            pieces.push({
+                square: toSquare,
+                piece: promotionPiece ? `${movingPiece.piece[0]}${promotionPiece}` : movingPiece.piece,
+            });
+
+            return movingPiece;
+        }
+
+        function openingLineText(moves) {
+            const pieces = startingPieces.map((piece) => ({ ...piece }));
+            const labels = moves.map((move, index) => {
+                const movingPiece = applyOpeningMoveToPieces(pieces, move);
+                const pieceLetter = movingPiece && movingPiece.piece[1] !== "p"
+                    ? movingPiece.piece[1].toUpperCase()
+                    : "";
+                const notation = `${pieceLetter}${move.slice(2, 4)}`;
+
+                return index % 2 === 0 ? `${Math.floor(index / 2) + 1}. ${notation}` : notation;
+            });
+
+            return labels.join(" ");
+        }
+
+        function openingMiniBoardHtml(moves) {
+            const piecesBySquare = new Map(piecesAfterOpeningMoves(moves).map((piece) => [piece.square, piece.piece]));
+            const latestMove = moves[moves.length - 1] || "";
+
+            return `
+                <div class="opening-mini-board" aria-hidden="true">
+                    ${whiteRanks.map((rank, rowIndex) => files.map((file, fileIndex) => {
+                        const squareName = `${file}${rank}`;
+                        const pieceCode = piecesBySquare.get(squareName);
+                        const latestClass = latestMove.slice(0, 2) === squareName || latestMove.slice(2, 4) === squareName ? " latest" : "";
+
+                        return `
+                            <div class="opening-mini-square ${(rowIndex + fileIndex) % 2 === 0 ? "light" : "dark"}${latestClass}">
+                                ${pieceCode ? `<img src="${pieceImages[pieceCode]}" alt="">` : ""}
+                            </div>
+                        `;
+                    }).join("")).join("")}
+                </div>
+            `;
+        }
+
+        function renderOpeningGuide() {
+            openingContentElement.innerHTML = openingSections.map((section) => `
+                <section class="opening-section">
+                    <h3 class="opening-section-title">${section.title}</h3>
+                    <div class="opening-grid">
+                        ${section.openings.map((opening) => `
+                            <article class="opening-card">
+                                ${openingMiniBoardHtml(opening.moves)}
+                                <h4 class="opening-card-title">${opening.name}</h4>
+                                <div class="opening-card-line">
+                                    <span>${openingLineText(opening.moves)}</span>
+                                    <span class="opening-tag">${opening.tag}</span>
+                                </div>
+                            </article>
+                        `).join("")}
+                    </div>
+                </section>
+            `).join("");
+        }
+
+        function openOpeningGuide() {
+            renderOpeningGuide();
+            openingOverlayElement.hidden = false;
+        }
+
+        function closeOpeningGuide() {
+            openingOverlayElement.hidden = true;
+        }
+
+        function tutorialMoveCapturesKing(step, move) {
+            const targetSquare = move.slice(2, 4);
+            const targetPiece = (step.pieces || []).find((piece) => piece.square === targetSquare);
+            return Boolean(targetPiece && targetPiece.piece.endsWith("k"));
+        }
+
+        function tutorialLegalMoves(step) {
+            if (step.type === "notation-quiz" || step.type === "reading") {
+                return [];
+            }
+
+            const moves = step.moves || (step.move ? [step.move] : []);
+            return moves.filter((move) => !tutorialMoveCapturesKing(step, move));
+        }
+
+        function tutorialRequestedMove(step) {
+            const legalMoves = tutorialLegalMoves(step);
+
+            if (step.targetMove && legalMoves.includes(step.targetMove)) {
+                return step.targetMove;
+            }
+
+            if (step.move && legalMoves.includes(step.move)) {
+                return step.move;
+            }
+
+            const target = (step.highlights || []).find((highlight) => highlight.label === "★" || highlight.type === "target");
+            const targetSquare = target?.square || step.to;
+
+            if (step.from && targetSquare) {
+                return legalMoves.find((move) => move.slice(0, 2) === step.from && move.slice(2, 4) === targetSquare) || null;
+            }
+
+            if (targetSquare) {
+                return legalMoves.find((move) => move.slice(2, 4) === targetSquare) || null;
+            }
+
+            return legalMoves[0] || null;
+        }
+
+        function tutorialResultPieces(step, solvedMove) {
+            if (step.type === "notation-quiz") {
+                return step.pieces;
+            }
+
+            if (step.resultPieces) {
+                return step.resultPieces;
+            }
+
+            const move = solvedMove || tutorialRequestedMove(step) || tutorialLegalMoves(step)[0] || "";
+            const fromSquare = move.slice(0, 2);
+            const toSquare = move.slice(2, 4);
+            const promotionPiece = move[4];
+            const movingPiece = step.pieces.find((piece) => piece.square === fromSquare);
+
+            if (!movingPiece) {
+                return step.pieces;
+            }
+
+            const movedPiece = promotionPiece ? `${movingPiece.piece[0]}${promotionPiece}` : movingPiece.piece;
+
+            return [
+                ...step.pieces.filter((piece) => piece.square !== fromSquare && piece.square !== toSquare),
+                { square: toSquare, piece: movedPiece },
+            ];
+        }
+
+        function tutorialStateForStep(solved = false) {
+            const step = currentTutorialStep();
+            const legalMoves = tutorialLegalMoves(step);
+            const solvedMove = tutorialSolvedMove || tutorialRequestedMove(step) || legalMoves[0] || "";
+            const moveText = solvedMove.replace(/[qrbn]$/, "");
+            const tutorialState = cloneState(initialGameState);
+            const isQuizStep = step.type === "notation-quiz";
+            const isReadingStep = step.type === "reading";
+
+            tutorialState.pieces = solved || isQuizStep || isReadingStep ? tutorialResultPieces(step, solvedMove) : step.pieces;
+            tutorialState.legal_moves = solved || isQuizStep || isReadingStep ? [] : legalMoves;
+            tutorialState.player_turn = !solved && !isReadingStep;
+            tutorialState.awaiting_bot_move = false;
+            tutorialState.awaiting_setup = false;
+            tutorialState.status = "tutorial";
+            tutorialState.status_text = solved ? "Press ★ for the next lesson" : step.action;
+            tutorialState.move_number = tutorialStepIndex + 1;
+            tutorialState.position_number = tutorialStepIndex + 1;
+            tutorialState.move_history = solved && !isQuizStep ? [{ side: "player", color: "white", uci: solvedMove, san: step.title }] : [];
+            tutorialState.notation_log = solved && !isQuizStep ? [{ number: tutorialStepIndex + 1, white: step.title, black: "" }] : [];
+            tutorialState.position_history = [];
+            tutorialState.captures = { white: [], black: [], white_score: 0, black_score: 0, balance: 0 };
+            tutorialState.evaluation = { cp: 0, mate: null, label: "0.0", white_percent: 50, black_percent: 50 };
+            tutorialState.analysis = null;
+            tutorialState.dialogue = [{ speaker: "{{ tutor.name|escapejs }}", text: solved ? step.completeText : step.chat }];
+            tutorialState.last_move = solved ? moveText : null;
+            tutorialState.engine_source = "Tutorial";
+
+            return tutorialState;
+        }
+
+        function loadTutorialStep(index = tutorialStepIndex, solved = false) {
+            tutorialStepIndex = Math.max(0, Math.min(index, tutorialSteps.length - 1));
+            tutorialStepSolved = solved;
+            tutorialSolvedMove = null;
+            tutorialQuizIndex = 0;
+            tutorialQuizAnswers = [];
+            readingStepReadyAt = !solved && currentTutorialStep().type === "reading" ? Date.now() + readingStepDelayMs : 0;
+            selectedSquare = null;
+            pendingPromotionMoves = [];
+            promotionOverlayElement.hidden = true;
+            state = tutorialStateForStep(solved);
+        }
+
+        function currentTutorialHighlightMap() {
+            if (!tutorialActive) {
+                return new Map();
+            }
+
+            return new Map((currentTutorialStep().highlights || []).map((highlight) => [highlight.square, highlight]));
+        }
+
+        function tutorialWrongMove(message = "That move is not legal in this position. Try the starred square.") {
+            errorElement.textContent = message;
+            playMoveSound("warning");
+            selectedSquare = null;
+            renderBoard();
+        }
+
+        function currentNotationQuizItem() {
+            const step = currentTutorialStep();
+            return (step.quizItems || [])[tutorialQuizIndex] || null;
+        }
+
+        function attemptNotationQuiz(squareName, pieceCode) {
+            const step = currentTutorialStep();
+            const quizItem = currentNotationQuizItem();
+
+            if (tutorialStepSolved) {
+                return;
+            }
+
+            if (!quizItem) {
+                completeTutorialStep(null);
+                return;
+            }
+
+            if (!pieceCode) {
+                tutorialWrongMove("Click a piece to match it with the notation question.");
+                return;
+            }
+
+            if (squareName !== quizItem.square) {
+                tutorialWrongMove(`That piece is on ${squareName}. Try matching: ${quizItem.prompt}.`);
+                return;
+            }
+
+            tutorialQuizAnswers.push(quizItem);
+            tutorialQuizIndex += 1;
+            errorElement.textContent = "";
+            selectedSquare = null;
+            playMoveSound("best");
+
+            if (tutorialQuizIndex >= (step.quizItems || []).length) {
+                completeTutorialStep(null);
+                return;
+            }
+
+            render();
+        }
+
+        function completeTutorialStep(move) {
+            const step = currentTutorialStep();
+            tutorialStepSolved = true;
+            tutorialSolvedMove = move || tutorialRequestedMove(step) || tutorialLegalMoves(step)[0] || null;
+            selectedSquare = null;
+            state = tutorialStateForStep(true);
+            errorElement.textContent = "";
+            playMoveSound(step.title.startsWith("Checkmate") ? "checkmate" : "best");
+            render();
+
+            if (autoSpeakToggleElement.checked) {
+                speakText(step.completeText);
+            }
+        }
+
+        function attemptTutorialMove(fromSquare, toSquare, moveUci = null) {
+            const step = currentTutorialStep();
+            const legalMoves = tutorialLegalMoves(step);
+            const move = moveUci || legalMoves.find((candidate) => candidate.slice(0, 4) === `${fromSquare}${toSquare}`);
+
+            if (tutorialStepSolved) {
+                return;
+            }
+
+            if (move && legalMoves.includes(move)) {
+                const requestedMove = tutorialRequestedMove(step);
+
+                if (!requestedMove || move === requestedMove) {
+                    completeTutorialStep(move);
+                    return;
+                }
+
+                if (step.title === "Promotion") {
+                    tutorialWrongMove("That promotion is legal, but try promoting to a queen.");
+                    return;
+                }
+
+                tutorialWrongMove("That move is legal, but try moving to the star square.");
+                return;
+            }
+
+            tutorialWrongMove();
+        }
+
+        function finishTutorial(message = "Tutorial skipped. You are now in the training game.") {
+            tutorialActive = false;
+            state = cloneState(initialGameState);
+            selectedSquare = null;
+            errorElement.textContent = "";
+            showMoves = true;
+            readingStepReadyAt = 0;
+
+            if (readingStepTimer) {
+                clearTimeout(readingStepTimer);
+                readingStepTimer = null;
+            }
+
+            render();
+
+            if (autoSpeakToggleElement.checked) {
+                speakText(message);
+            }
+        }
+
+        function nextTutorialStep() {
+            if (!tutorialActive) {
+                return;
+            }
+
+            const step = currentTutorialStep();
+            const readingWaitMs = currentReadingWaitMs();
+
+            if (!tutorialStepSolved && step.type === "reading" && readingWaitMs > 0) {
+                errorElement.textContent = `Read this first. ★ unlocks in ${Math.ceil(readingWaitMs / 1000)}s.`;
+                renderStatus();
+                return;
+            }
+
+            if (!tutorialStepSolved && currentTutorialStep().type !== "reading") {
+                tutorialWrongMove(step.type === "notation-quiz"
+                    ? "Finish the notation matches before continuing."
+                    : "Move to the starred square before continuing.");
+                return;
+            }
+
+            if (tutorialStepIndex >= tutorialSteps.length - 1) {
+                finishTutorial("Tutorial complete. Now play the training game and I will coach your moves.");
+                return;
+            }
+
+            loadTutorialStep(tutorialStepIndex + 1, false);
+            render();
+
+            if (autoSpeakToggleElement.checked) {
+                const step = currentTutorialStep();
+                speakText(`${step.title}. ${step.text} ${step.action}`);
+            }
+        }
+
+        function previousTutorialStep() {
+            if (!tutorialActive) {
+                return;
+            }
+
+            loadTutorialStep(tutorialStepIndex - 1, false);
+            errorElement.textContent = "";
+            render();
+        }
+
+        function getPiecesBySquare() {
+            return new Map((state.pieces || []).map((piece) => [piece.square, piece.piece]));
+        }
+
+        function getTargetsFor(square) {
+            return new Set(
+                state.legal_moves
+                    .filter((move) => move.slice(0, 2) === square)
+                    .map((move) => move.slice(2, 4))
+            );
+        }
+
+        function legalMovesBetween(fromSquare, toSquare) {
+            return state.legal_moves.filter((move) => (
+                move.slice(0, 2) === fromSquare && move.slice(2, 4) === toSquare
+            ));
+        }
+
+        function sideCaptures(color) {
+            const captureData = state.captures && state.captures[color];
+
+            if (!captureData || Array.isArray(captureData)) {
+                return { pieces: [], advantage: 0 };
+            }
+
+            return captureData;
+        }
+
+        function renderCaptureRow(element, color) {
+            const captureData = sideCaptures(color);
+            element.innerHTML = "";
+            element.hidden = !captureData.pieces.length && !captureData.advantage;
+
+            captureData.pieces.forEach((pieceCode) => {
+                const image = document.createElement("img");
+                image.src = pieceImages[pieceCode];
+                image.alt = `${pieceCode.startsWith("w") ? "White" : "Black"} ${pieceNames[pieceCode[1]]}`;
+                element.appendChild(image);
+            });
+
+            if (captureData.advantage) {
+                const score = document.createElement("span");
+                score.className = "capture-score";
+                score.textContent = `+${captureData.advantage}`;
+                element.appendChild(score);
+            }
+        }
+
+        function renderCaptures() {
+            const playerColor = state.player_color || "white";
+            const tutorColor = playerColor === "white" ? "black" : "white";
+
+            renderCaptureRow(topCapturesElement, tutorColor);
+            renderCaptureRow(bottomCapturesElement, playerColor);
+        }
+
+        function addOptimisticCapture(nextState, captureColor, capturedPieceCode) {
+            if (!capturedPieceCode) {
+                return;
+            }
+
+            const otherColor = captureColor === "white" ? "black" : "white";
+            const nextCaptures = cloneState(nextState.captures || {});
+            const currentCaptureData = nextCaptures[captureColor] && !Array.isArray(nextCaptures[captureColor])
+                ? nextCaptures[captureColor]
+                : { pieces: [], material: 0, advantage: 0 };
+            const otherCaptureData = nextCaptures[otherColor] && !Array.isArray(nextCaptures[otherColor])
+                ? nextCaptures[otherColor]
+                : { pieces: [], material: 0, advantage: 0 };
+            const capturedValue = captureValues[capturedPieceCode[1]] || 0;
+            const captureMaterial = (currentCaptureData.material || 0) + capturedValue;
+            const otherMaterial = otherCaptureData.material || 0;
+
+            nextCaptures[captureColor] = {
+                ...currentCaptureData,
+                pieces: [...(currentCaptureData.pieces || []), capturedPieceCode],
+                material: captureMaterial,
+                advantage: Math.max(captureMaterial - otherMaterial, 0),
+            };
+            nextCaptures[otherColor] = {
+                ...otherCaptureData,
+                advantage: Math.max(otherMaterial - captureMaterial, 0),
+            };
+            nextState.captures = nextCaptures;
+        }
+
+        function hasLegalMoveFrom(square) {
+            return state.legal_moves.some((move) => move.slice(0, 2) === square);
+        }
+
+        function canMovePiece(square, pieceCode) {
+            return state.player_turn && pieceCode && pieceCode.startsWith(playerPiecePrefix()) && hasLegalMoveFrom(square);
+        }
+
+        function currentFeedback() {
+            return state.tutor_feedback || null;
+        }
+
+        function feedbackBadge(feedback) {
+            if (!feedback) {
+                return "";
+            }
+
+            if (feedback.severity === "danger") {
+                return "Blunder";
+            }
+
+            if (feedback.severity === "warning") {
+                return "Mistake";
+            }
+
+            if (feedback.title === "Best Move" || feedback.severity === "strong") {
+                return "Best";
+            }
+
+            return "Move";
+        }
+
+        function applyFeedbackMarker(square, squareName) {
+            const feedback = currentFeedback();
+
+            if (!feedback || selectedSquare) {
+                return;
+            }
+
+            const playedSquares = [feedback.played_from, feedback.played_to].filter(Boolean);
+            const bestSquares = [feedback.best_from, feedback.best_to].filter(Boolean);
+            const playedMove = `${feedback.played_from || ""}${feedback.played_to || ""}`;
+            const bestMove = (feedback.best_move || "").slice(0, 4);
+            const playedWasBest = playedMove && bestMove && playedMove === bestMove;
+
+            if (playedSquares.includes(squareName)) {
+                square.classList.add("tutor-played-square", feedback.severity || "neutral");
+            }
+
+            if (!playedWasBest && bestSquares.includes(squareName)) {
+                square.classList.add("tutor-best-square");
+            }
+
+            if (squareName === feedback.played_to) {
+                square.classList.add("tutor-played-target");
+                square.dataset.badge = feedbackBadge(feedback);
+            }
+
+            if (!playedWasBest && squareName === feedback.best_to) {
+                square.classList.add("tutor-best-target");
+                square.dataset.badge = "Best";
+            }
+        }
+
+        function clearDragHighlights() {
+            boardElement.querySelectorAll(".selected, .legal-target, .has-piece").forEach((square) => {
+                square.classList.remove("selected", "legal-target", "has-piece");
+            });
+        }
+
+        function showDragTargets(square) {
+            clearDragHighlights();
+            selectedSquare = square;
+            boardElement.querySelector(`[data-square="${square}"]`)?.classList.add("selected");
+
+            const piecesBySquare = getPiecesBySquare();
+            getTargetsFor(square).forEach((targetSquare) => {
+                const targetElement = boardElement.querySelector(`[data-square="${targetSquare}"]`);
+
+                if (!targetElement) {
+                    return;
+                }
+
+                targetElement.classList.add("legal-target");
+
+                if (piecesBySquare.has(targetSquare)) {
+                    targetElement.classList.add("has-piece");
+                }
+            });
+        }
+
+        function handleDragStart(event) {
+            const fromSquare = event.target.dataset.square;
+
+            if (!fromSquare || !hasLegalMoveFrom(fromSquare)) {
+                event.preventDefault();
+                return;
+            }
+
+            event.stopPropagation();
+            event.dataTransfer.effectAllowed = "move";
+            event.dataTransfer.setData("text/plain", fromSquare);
+            event.dataTransfer.setDragImage(event.target, event.target.width / 2, event.target.height / 2);
+            showDragTargets(fromSquare);
+        }
+
+        function handleDragEnd() {
+            if (!busy) {
+                selectedSquare = null;
+                clearDragHighlights();
+                renderBoard();
+            }
+        }
+
+        function handleDragOver(event) {
+            if (selectedSquare) {
+                event.preventDefault();
+                event.dataTransfer.dropEffect = "move";
+            }
+        }
+
+        function handleDrop(event) {
+            event.preventDefault();
+            const fromSquare = event.dataTransfer.getData("text/plain");
+            const toSquare = event.currentTarget.dataset.square;
+
+            if (fromSquare && toSquare) {
+                chooseMove(fromSquare, toSquare);
+            }
+        }
+
+        function renderBoard() {
+            const piecesBySquare = getPiecesBySquare();
+            const targets = selectedSquare ? getTargetsFor(selectedSquare) : new Set();
+            const lastMove = state.last_move || "";
+            const tutorialHighlightMap = currentTutorialHighlightMap();
+            const displayFiles = boardFiles();
+            const displayRanks = boardRanks();
+            boardElement.innerHTML = "";
+
+            displayRanks.forEach((rank, rowIndex) => {
+                displayFiles.forEach((file, fileIndex) => {
+                    const squareName = `${file}${rank}`;
+                    const pieceCode = piecesBySquare.get(squareName);
+                    const canDrag = canMovePiece(squareName, pieceCode);
+                    const tutorialHighlight = tutorialHighlightMap.get(squareName);
+                    const square = document.createElement("button");
+                    square.type = "button";
+                    square.className = `square ${(rowIndex + fileIndex) % 2 === 0 ? "light" : "dark"}`;
+                    square.dataset.square = squareName;
+                    square.draggable = false;
+                    square.setAttribute("aria-label", squareName);
+
+                    if (lastMove.slice(0, 2) === squareName || lastMove.slice(2, 4) === squareName) {
+                        square.classList.add("last-move");
+                    }
+
+                    if (selectedSquare === squareName) {
+                        square.classList.add("selected");
+                    }
+
+                    if (targets.has(squareName)) {
+                        square.classList.add("legal-target");
+
+                        if (pieceCode) {
+                            square.classList.add("has-piece");
+                        }
+                    }
+
+                    if (tutorialHighlight) {
+                        square.classList.add(`tutorial-${tutorialHighlight.type || "path"}`);
+                    }
+
+                    if (tutorialActive && tutorialStepSolved && squareName === currentTutorialStep().to) {
+                        square.classList.add("tutorial-complete");
+                    }
+
+                    if (tutorialActive && currentTutorialStep().type === "notation-quiz" && tutorialQuizAnswers.some((answer) => answer.square === squareName)) {
+                        square.classList.add("tutorial-complete");
+                    }
+
+                    applyFeedbackMarker(square, squareName);
+
+                    if (fileIndex === 0) {
+                        const rankLabel = document.createElement("span");
+                        rankLabel.className = "coord rank-label";
+                        rankLabel.textContent = rank;
+                        square.appendChild(rankLabel);
+                    }
+
+                    if (rowIndex === displayRanks.length - 1) {
+                        const fileLabel = document.createElement("span");
+                        fileLabel.className = "coord file-label";
+                        fileLabel.textContent = file;
+                        square.appendChild(fileLabel);
+                    }
+
+                    if (pieceCode) {
+                        const piece = document.createElement("img");
+                        piece.className = canDrag ? "piece draggable-piece" : "piece";
+                        piece.src = pieceImages[pieceCode];
+                        piece.alt = pieceCode;
+                        piece.draggable = canDrag;
+                        piece.dataset.square = squareName;
+
+                        piece.addEventListener("dragstart", handleDragStart);
+                        piece.addEventListener("dragend", handleDragEnd);
+
+                        square.appendChild(piece);
+                    }
+
+                    if (tutorialHighlight?.label) {
+                        const badge = document.createElement("span");
+                        badge.className = `tutorial-badge ${tutorialHighlight.label === "★" ? "star" : ""}`;
+                        badge.textContent = tutorialHighlight.label;
+                        square.appendChild(badge);
+                    }
+
+                    square.addEventListener("click", () => handleSquareClick(squareName, pieceCode));
+                    square.addEventListener("dragover", handleDragOver);
+                    square.addEventListener("drop", handleDrop);
+
+                    boardElement.appendChild(square);
+                });
+            });
+        }
+
+        function handleSquareClick(squareName, pieceCode) {
+            if (busy || !state.player_turn) {
+                return;
+            }
+
+            if (tutorialActive && currentTutorialStep().type === "notation-quiz") {
+                attemptNotationQuiz(squareName, pieceCode);
+                return;
+            }
+
+            if (selectedSquare && selectedSquare !== squareName) {
+                const moves = legalMovesBetween(selectedSquare, squareName);
+
+                if (moves.length) {
+                    errorElement.textContent = "";
+                    chooseMove(selectedSquare, squareName);
+                    return;
+                }
+            }
+
+            selectedSquare = canMovePiece(squareName, pieceCode) ? squareName : null;
+            if (selectedSquare) {
+                errorElement.textContent = "";
+            }
+            renderBoard();
+        }
+
+        function chooseMove(fromSquare, toSquare) {
+            const moves = legalMovesBetween(fromSquare, toSquare);
+            const promotionMoves = moves.filter((move) => move.length === 5);
+
+            if (promotionMoves.length > 1) {
+                pendingPromotionMoves = promotionMoves;
+                renderPromotionChoices();
+                promotionOverlayElement.hidden = false;
+                return;
+            }
+
+            if (tutorialActive) {
+                if (moves.length) {
+                    attemptTutorialMove(fromSquare, toSquare, moves[0]);
+                } else {
+                    tutorialWrongMove();
+                }
+                return;
+            }
+
+            if (!moves.length) {
+                selectedSquare = null;
+                renderBoard();
+                return;
+            }
+
+            sendMove(moves[0]);
+        }
+
+        function renderPromotionChoices() {
+            promotionChoiceElement.innerHTML = "";
+            promotionPieces.forEach((piece) => {
+                const move = pendingPromotionMoves.find((candidate) => candidate.endsWith(piece));
+
+                if (!move) {
+                    return;
+                }
+
+                const button = document.createElement("button");
+                const pieceCode = `${playerPiecePrefix()}${piece}`;
+                button.type = "button";
+                button.className = "promotion-button";
+                button.innerHTML = `<img src="${pieceImages[pieceCode]}" alt="${pieceNames[piece]}">${pieceNames[piece]}`;
+                button.addEventListener("click", () => {
+                    promotionOverlayElement.hidden = true;
+
+                    if (tutorialActive) {
+                        attemptTutorialMove(move.slice(0, 2), move.slice(2, 4), move);
+                        return;
+                    }
+
+                    sendMove(move);
+                });
+                promotionChoiceElement.appendChild(button);
+            });
+        }
+
+        async function postJson(url, payload = {}) {
+            const response = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken,
+                },
+                body: JSON.stringify(payload),
+            });
+            const data = await response.json();
+
+            if (!response.ok || !data.ok) {
+                throw new Error(data.error || "Move failed.");
+            }
+
+            return data.state;
+        }
+
+        function pieceAtSquare(gameState, squareName) {
+            return (gameState.pieces || []).find((piece) => piece.square === squareName) || null;
+        }
+
+        function optimisticMoveSoundKind(gameState, move) {
+            const fromSquare = move.slice(0, 2);
+            const toSquare = move.slice(2, 4);
+            const movingPiece = pieceAtSquare(gameState, fromSquare);
+            const targetPiece = pieceAtSquare(gameState, toSquare);
+
+            if (!movingPiece) {
+                return "move";
+            }
+
+            const isPawn = movingPiece.piece[1] === "p";
+            const isDiagonalPawnMove = isPawn && fromSquare[0] !== toSquare[0];
+
+            return targetPiece || isDiagonalPawnMove ? "capture" : "move";
+        }
+
+        function optimisticStateAfterMove(gameState, move) {
+            const nextState = cloneState(gameState);
+            const fromSquare = move.slice(0, 2);
+            const toSquare = move.slice(2, 4);
+            const promotionPiece = move[4];
+            const movingPiece = pieceAtSquare(gameState, fromSquare);
+
+            if (!movingPiece) {
+                return nextState;
+            }
+
+            const fromFileIndex = files.indexOf(fromSquare[0]);
+            const toFileIndex = files.indexOf(toSquare[0]);
+            const fromRank = fromSquare[1];
+            const movingPieceType = movingPiece.piece[1];
+            const movingColour = movingPiece.piece[0];
+            const targetPiece = pieceAtSquare(gameState, toSquare);
+            const isEnPassant = movingPieceType === "p" && fromSquare[0] !== toSquare[0] && !targetPiece;
+            const enPassantSquare = isEnPassant ? `${toSquare[0]}${fromRank}` : null;
+            const enPassantPiece = enPassantSquare ? pieceAtSquare(gameState, enPassantSquare) : null;
+            const capturedPiece = targetPiece || enPassantPiece;
+            const isCastle = movingPieceType === "k" && Math.abs(toFileIndex - fromFileIndex) === 2;
+            const nextPieces = (gameState.pieces || [])
+                .filter((piece) => piece.square !== fromSquare)
+                .filter((piece) => piece.square !== toSquare)
+                .filter((piece) => piece.square !== enPassantSquare);
+
+            if (isCastle) {
+                const rookFromSquare = toSquare[0] === "g" ? `h${fromRank}` : `a${fromRank}`;
+                const rookToSquare = toSquare[0] === "g" ? `f${fromRank}` : `d${fromRank}`;
+                const rookPiece = pieceAtSquare(gameState, rookFromSquare);
+
+                if (rookPiece) {
+                    const rookIndex = nextPieces.findIndex((piece) => piece.square === rookFromSquare);
+
+                    if (rookIndex >= 0) {
+                        nextPieces.splice(rookIndex, 1);
+                    }
+
+                    nextPieces.push({ square: rookToSquare, piece: rookPiece.piece });
+                }
+            }
+
+            nextPieces.push({
+                square: toSquare,
+                piece: promotionPiece ? `${movingColour}${promotionPiece}` : movingPiece.piece,
+            });
+
+            nextState.pieces = nextPieces;
+            addOptimisticCapture(nextState, movingColour === "w" ? "white" : "black", capturedPiece?.piece || null);
+            nextState.legal_moves = [];
+            nextState.player_turn = false;
+            nextState.awaiting_bot_move = true;
+            nextState.awaiting_setup = false;
+            nextState.can_undo = false;
+            nextState.last_move = move;
+            nextState.status_text = "Tutor reviewing";
+            nextState.tutor_feedback = null;
+            nextState.optimistic_move = true;
+            nextState.dialogue = [
+                ...(gameState.dialogue || []).slice(-7),
+                { speaker: "{{ tutor.name|escapejs }}", text: "Give me a second, I am checking that move." },
+            ];
+
+            return nextState;
+        }
+
+        function playFeedbackCue(nextState) {
+            const feedback = nextState.tutor_feedback;
+
+            if (!feedback) {
+                return;
+            }
+
+            if (feedback.severity === "danger") {
+                playMoveSound("mistake");
+                return;
+            }
+
+            if (feedback.severity === "warning") {
+                playMoveSound("warning");
+                return;
+            }
+
+            if (feedback.title === "Best Move" || feedback.severity === "strong") {
+                playMoveSound("best");
+            }
+        }
+
+        async function startMatch(color) {
+            if (busy) {
+                return;
+            }
+
+            busy = true;
+            errorElement.textContent = "";
+            statusElement.textContent = "Starting training...";
+
+            try {
+                state = await postJson(startUrl, { color });
+                selectedSquare = null;
+                render();
+
+                if (autoSpeakToggleElement.checked) {
+                    speakTutorMessage();
+                }
+            } catch (error) {
+                errorElement.textContent = error.message;
+                renderStatus();
+            } finally {
+                busy = false;
+                renderStatus();
+            }
+        }
+
+        function getAudioContext() {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+
+            if (!AudioContext) {
+                return null;
+            }
+
+            if (!audioContext) {
+                audioContext = new AudioContext();
+            }
+
+            if (audioContext.state === "suspended") {
+                audioContext.resume();
+            }
+
+            return audioContext;
+        }
+
+        function playTone(context, frequency, start, duration, gainValue = 0.08, type = "triangle") {
+            const oscillator = context.createOscillator();
+            const gain = context.createGain();
+            oscillator.type = type;
+            oscillator.frequency.setValueAtTime(frequency, start);
+            gain.gain.setValueAtTime(0.0001, start);
+            gain.gain.exponentialRampToValueAtTime(gainValue, start + 0.012);
+            gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+            oscillator.connect(gain);
+            gain.connect(context.destination);
+            oscillator.start(start);
+            oscillator.stop(start + duration + 0.02);
+        }
+
+        function playMoveSound(kind = "move") {
+            const context = getAudioContext();
+
+            if (!context) {
+                return;
+            }
+
+            const now = context.currentTime;
+
+            if (kind === "best") {
+                playTone(context, 440, now, 0.08, 0.07);
+                playTone(context, 660, now + 0.07, 0.11, 0.09);
+                return;
+            }
+
+            if (kind === "warning") {
+                playTone(context, 330, now, 0.1, 0.08, "square");
+                playTone(context, 294, now + 0.1, 0.12, 0.07, "square");
+                return;
+            }
+
+            if (kind === "mistake") {
+                playTone(context, 180, now, 0.16, 0.1, "sawtooth");
+                playTone(context, 140, now + 0.1, 0.18, 0.07, "sawtooth");
+                return;
+            }
+
+            if (kind === "check") {
+                playTone(context, 659, now, 0.08, 0.09, "square");
+                playTone(context, 494, now + 0.08, 0.1, 0.07, "square");
+                return;
+            }
+
+            if (kind === "checkmate") {
+                playTone(context, 392, now, 0.11, 0.09);
+                playTone(context, 523, now + 0.09, 0.12, 0.1);
+                playTone(context, 784, now + 0.19, 0.18, 0.11);
+                return;
+            }
+
+            if (kind === "capture") {
+                playTone(context, 210, now, 0.11, 0.12, "triangle");
+                playTone(context, 150, now + 0.04, 0.1, 0.08, "sine");
+                return;
+            }
+
+            playTone(context, 360, now, 0.1, 0.08);
+        }
+
+        function latestMove(nextState) {
+            const history = nextState.move_history || [];
+            return history[history.length - 1] || null;
+        }
+
+        function moveSoundKind(previousState, nextState, feedbackAware = false) {
+            const previousLength = previousState?.move_history?.length || 0;
+            const nextLength = nextState?.move_history?.length || 0;
+
+            if (nextLength <= previousLength) {
+                return null;
+            }
+
+            if (nextState.winner) {
+                return "checkmate";
+            }
+
+            if (nextState.status_text?.startsWith("Check.")) {
+                return "check";
+            }
+
+            if (feedbackAware && nextState.tutor_feedback) {
+                if (nextState.tutor_feedback.severity === "danger") {
+                    return "mistake";
+                }
+
+                if (nextState.tutor_feedback.severity === "warning") {
+                    return "warning";
+                }
+
+                if (nextState.tutor_feedback.title === "Best Move" || nextState.tutor_feedback.severity === "strong") {
+                    return "best";
+                }
+            }
+
+            const move = latestMove(nextState);
+            return move?.san?.includes("x") ? "capture" : "move";
+        }
+
+        function playLatestMoveSound(previousState, nextState, feedbackAware = false) {
+            const kind = moveSoundKind(previousState, nextState, feedbackAware);
+
+            if (kind) {
+                playMoveSound(kind);
+            }
+        }
+
+        function latestTutorSpeechText() {
+            if (tutorialActive) {
+                const step = currentTutorialStep();
+                return tutorialStepSolved ? step.completeText : `${step.title}. ${step.text} ${step.action}`;
+            }
+
+            if (state.tutor_feedback?.message) {
+                return state.tutor_feedback.message;
+            }
+
+            if (openingGuideAvailable() && !(state.move_history || []).some((move) => move.side === "player")) {
+                return "Check opening moves before you start. Use the Openings button near the move counter to choose a plan.";
+            }
+
+            const latestDialogue = (state.dialogue || []).slice(-1)[0];
+            return latestDialogue?.text || "";
+        }
+
+        function populateVoiceOptions() {
+            if (!voiceSelectElement || !("speechSynthesis" in window)) {
+                return;
+            }
+
+            availableVoices = window.speechSynthesis.getVoices();
+            const savedVoice = localStorage.getItem(voiceStorageKey) || "";
+            const preferredVoice = preferredTutorVoice();
+            const selectedVoiceName = savedVoice || preferredVoice?.name || "";
+            voiceSelectElement.innerHTML = '<option value="">System voice</option>';
+
+            availableVoices.forEach((voice) => {
+                const option = document.createElement("option");
+                option.value = voice.name;
+                option.textContent = `${voice.name} (${voice.lang})`;
+                option.selected = voice.name === selectedVoiceName;
+                voiceSelectElement.appendChild(option);
+            });
+
+            if (!savedVoice && preferredVoice) {
+                voiceSelectElement.value = preferredVoice.name;
+            }
+        }
+
+        function preferredTutorVoice() {
+            if (!availableVoices.length) {
+                return null;
+            }
+
+            const exactName = tutorVoiceGender === "female"
+                ? "Google UK English Female"
+                : "Google UK English Male";
+            const exact = availableVoices.find((voice) => voice.name === exactName);
+
+            if (exact) {
+                return exact;
+            }
+
+            const genderMatch = availableVoices.find((voice) => {
+                const name = voice.name.toLowerCase();
+                return voice.lang === "en-GB" && name.includes(tutorVoiceGender);
+            });
+
+            if (genderMatch) {
+                return genderMatch;
+            }
+
+            const googleUk = availableVoices.find((voice) => {
+                const name = voice.name.toLowerCase();
+                return voice.lang === "en-GB" && name.includes("google");
+            });
+
+            if (googleUk) {
+                return googleUk;
+            }
+
+            return availableVoices.find((voice) => voice.lang === "en-GB") || null;
+        }
+
+        function selectedVoice() {
+            if (!voiceSelectElement?.value) {
+                return null;
+            }
+
+            return availableVoices.find((voice) => voice.name === voiceSelectElement.value) || null;
+        }
+
+        function speakText(text) {
+            if (!text || !("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) {
+                return null;
+            }
+
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            const voice = selectedVoice();
+
+            if (voice) {
+                utterance.voice = voice;
+            }
+
+            utterance.rate = 0.94;
+            utterance.pitch = 0.96;
+            utterance.volume = 0.9;
+            window.speechSynthesis.speak(utterance);
+            return utterance;
+        }
+
+        function speakTutorMessage(text = latestTutorSpeechText()) {
+            return speakText(text);
+        }
+
+        function tryInitialAutoSpeak() {
+            if (initialAutoSpeechDone || !autoSpeakToggleElement.checked) {
+                return;
+            }
+
+            const utterance = speakTutorMessage();
+
+            if (utterance) {
+                utterance.onstart = () => {
+                    initialAutoSpeechDone = true;
+                };
+                utterance.onend = () => {
+                    initialAutoSpeechDone = true;
+                };
+            }
+        }
+
+        async function sendMove(move) {
+            if (busy) {
+                return;
+            }
+
+            busy = true;
+            errorElement.textContent = "";
+            getAudioContext();
+            const previousState = cloneState(state);
+
+            try {
+                const instantSound = optimisticMoveSoundKind(previousState, move);
+                state = optimisticStateAfterMove(previousState, move);
+                selectedSquare = null;
+                playMoveSound(instantSound);
+                render();
+
+                state = await postJson(playerMoveUrl, { move });
+                selectedSquare = null;
+                render();
+                playFeedbackCue(state);
+
+                if (autoSpeakToggleElement.checked) {
+                    speakTutorMessage();
+                }
+
+                if (state.awaiting_bot_move) {
+                    statusElement.textContent = "Tutor thinking";
+                    await sleep(680);
+                    const beforeReplyState = state;
+                    state = await postJson(tutorReplyUrl);
+                    playLatestMoveSound(beforeReplyState, state);
+                    render();
+                }
+            } catch (error) {
+                state = previousState;
+                selectedSquare = null;
+                errorElement.textContent = error.message;
+                render();
+            } finally {
+                busy = false;
+                renderStatus();
+            }
+        }
+
+        async function undoMove() {
+            if (busy) {
+                return;
+            }
+
+            busy = true;
+            errorElement.textContent = "";
+
+            try {
+                state = await postJson(tutorUndoUrl);
+                selectedSquare = null;
+                playMoveSound("warning");
+                render();
+            } catch (error) {
+                errorElement.textContent = error.message;
+            } finally {
+                busy = false;
+                renderStatus();
+            }
+        }
+
+        function renderFeedback() {
+            if (tutorialActive) {
+                const step = currentTutorialStep();
+                const progressText = `Lesson ${tutorialStepIndex + 1} of ${tutorialSteps.length}`;
+
+                primaryChatElement.textContent = tutorialStepSolved ? step.completeText : step.chat;
+                feedbackTitleElement.className = `feedback-title ${tutorialStepSolved ? "strong" : ""}`;
+                feedbackTitleElement.textContent = step.title;
+                feedbackMessageElement.textContent = tutorialStepSolved ? step.completeText : step.text;
+                feedbackMetaElement.hidden = false;
+                feedbackMetaElement.innerHTML = `<span>${progressText}</span>`;
+                return;
+            }
+
+            const feedback = state.tutor_feedback;
+            const latestDialogue = (state.dialogue || []).slice(-1)[0];
+
+            if (latestDialogue) {
+                primaryChatElement.textContent = latestDialogue.text;
+            }
+
+            if (state.optimistic_move) {
+                feedbackTitleElement.className = "feedback-title";
+                feedbackTitleElement.textContent = "Tutor reviewing";
+                feedbackMessageElement.textContent = "Your move is on the board. The tutor is comparing it with the engine before replying.";
+                feedbackMetaElement.hidden = true;
+                return;
+            }
+
+            if (!feedback) {
+                const playerHasMoved = (state.move_history || []).some((move) => move.side === "player");
+
+                if (openingGuideAvailable() && !playerHasMoved) {
+                    primaryChatElement.textContent = "Check opening moves before you start. Pick a plan, fight for the centre, and develop your pieces.";
+                    feedbackTitleElement.className = "feedback-title";
+                    feedbackTitleElement.textContent = "Check opening moves";
+                    feedbackMessageElement.textContent = "Use the Openings button next to the move counter to compare common first-move plans before choosing your move.";
+                    feedbackMetaElement.hidden = true;
+                    return;
+                }
+
+                feedbackTitleElement.className = "feedback-title";
+                feedbackTitleElement.textContent = "Make your first move";
+                feedbackMessageElement.textContent = "Your tutor will compare your move against the best move, explain mistakes and let you go back.";
+                feedbackMetaElement.hidden = true;
+                return;
+            }
+
+            feedbackTitleElement.className = `feedback-title ${feedback.severity || ""}`;
+            feedbackTitleElement.textContent = feedback.title;
+            feedbackMessageElement.textContent = feedback.message;
+            feedbackMetaElement.hidden = false;
+            feedbackMetaElement.innerHTML = `
+                <span>Played: <strong>${feedback.played_san || "-"}</strong></span>
+                <span>Best: <strong>${feedback.best_san || "-"}</strong></span>
+                <span>${feedback.engine_source}</span>
+            `;
+        }
+
+        function renderEvaluation() {
+            const evaluation = state.evaluation || {};
+            const whitePercent = Number(evaluation.white_percent);
+            const safePercent = Number.isFinite(whitePercent)
+                ? Math.max(5, Math.min(95, whitePercent))
+                : 50;
+
+            evaluationFillElement.style.height = `${safePercent}%`;
+            evaluationLabelElement.textContent = evaluation.label || "Even";
+        }
+
+        function renderCoachTools() {
+            if (tutorialActive) {
+                coachToolsElement.hidden = true;
+                return;
+            }
+
+            coachToolsElement.hidden = false;
+            const playerHasMoved = (state.move_history || []).some((move) => move.side === "player");
+            coachToolsElement.classList.toggle("active-tips", playerHasMoved);
+            coachToolsElement.classList.toggle("starter-mode", !playerHasMoved);
+            coachStarterTipsElement.hidden = playerHasMoved;
+            const feedback = state.tutor_feedback;
+
+            if (!feedback) {
+                coachHintElement.textContent = "Before every move, check forcing moves first: checks, captures and threats.";
+                return;
+            }
+
+            if (feedback.severity === "danger" && feedback.best_san) {
+                coachHintElement.textContent = `Training focus: use Go Back and try ${feedback.best_san}. Compare it with ${feedback.played_san || "your move"}.`;
+                return;
+            }
+
+            if (feedback.severity === "warning" && feedback.best_san) {
+                coachHintElement.textContent = `There was a stronger idea: ${feedback.best_san}. Ask why that move improves the position before continuing.`;
+                return;
+            }
+
+            if (feedback.best_san) {
+                coachHintElement.textContent = `Good habit: compare your move with the engine suggestion ${feedback.best_san}, then keep scanning threats.`;
+                return;
+            }
+
+            coachHintElement.textContent = "Keep building the habit: checks, captures, threats, then improve your worst piece.";
+        }
+
+        function renderTutorialNotation(step) {
+            if (!step.notationExamples) {
+                return "";
+            }
+
+            return `
+                <div class="notation-demo">
+                    ${step.notationExamples.map((example) => {
+                        const code = `${example.piece || ""}${example.square}`;
+                        const breakdown = example.piece
+                            ? `<span class="notation-chip">${example.piece} = ${example.pieceName}</span><span class="notation-chip">${example.square} = square</span>`
+                            : `<span class="notation-chip">${example.square} = ${example.pieceName} to ${example.square}</span>`;
+
+                        return `
+                            <div class="notation-card">
+                                <div class="notation-code" aria-label="${code}">
+                                    ${example.piece ? `<span class="notation-token notation-piece">${example.piece}</span>` : ""}
+                                    <span class="notation-token notation-square">${example.square}</span>
+                                </div>
+                                <div class="notation-breakdown">${breakdown}</div>
+                                <div class="notation-meaning">${example.meaning}</div>
+                            </div>
+                        `;
+                    }).join("")}
+                </div>
+            `;
+        }
+
+        function renderNotationQuiz(step) {
+            if (step.type !== "notation-quiz") {
+                return "";
+            }
+
+            return `
+                <div class="notation-quiz">
+                    ${(step.quizItems || []).map((item, index) => {
+                        const answer = tutorialQuizAnswers.find((candidate) => candidate.square === item.square);
+                        const isActive = !tutorialStepSolved && index === tutorialQuizIndex;
+
+                        return `
+                            <div class="quiz-row ${isActive ? "active" : ""}">
+                                <div class="quiz-prompt ${item.notation ? "notation-question" : ""}">${item.prompt}</div>
+                                <div class="quiz-answer ${answer ? "" : "empty"}">${answer ? answer.answer : "____"}</div>
+                            </div>
+                        `;
+                    }).join("")}
+                </div>
+            `;
+        }
+
+        function renderTutorialReadingRules(step) {
+            if (!step.readingRules) {
+                return "";
+            }
+
+            return `
+                <div class="tutorial-rule-list">
+                    ${step.readingRules.map((rule) => `<div class="tutorial-rule">${rule}</div>`).join("")}
+                </div>
+            `;
+        }
+
+        function renderMoveLog() {
+            moveLogElement.innerHTML = "";
+            moveLogElement.classList.remove("pre-game-empty");
+
+            if (tutorialActive) {
+                const step = currentTutorialStep();
+                const notationHtml = renderTutorialNotation(step);
+                const quizHtml = renderNotationQuiz(step);
+                const readingRulesHtml = renderTutorialReadingRules(step);
+                const ruleHtml = step.type === "reading"
+                    ? `<div class="tutorial-rule">Read these rules, then press ★ to continue.</div>`
+                    : step.type === "notation-quiz"
+                    ? `
+                        <div class="tutorial-rule">${tutorialStepSolved ? "Correct. Press ★ to continue." : "Click the piece that matches the active question."}</div>
+                        <div class="tutorial-rule">Square names use file then rank: f1 means file f, rank 1.</div>
+                        <div class="tutorial-rule">Pieces use a capital letter: R rook, N knight, B bishop, Q queen, K king. Pawns use the square name without a piece letter.</div>
+                    `
+                    : `<div class="tutorial-rule">${tutorialStepSolved ? "Correct. Press ★ to continue." : "Move to ★ to complete the lesson. The dots show other legal moves, but the tutor asked for the star."}</div>`;
+                const guide = document.createElement("div");
+                guide.className = "tutorial-guide";
+                guide.innerHTML = `
+                    <h3 class="tutorial-guide-title">${step.action}</h3>
+                    <p class="tutorial-guide-copy">${step.note}</p>
+                    ${notationHtml}
+                    ${quizHtml}
+                    ${readingRulesHtml}
+                    <div class="tutorial-rule-list">
+                        ${ruleHtml}
+                    </div>
+                `;
+                moveLogElement.appendChild(guide);
+                return;
+            }
+
+            if (!showMoves) {
+                const empty = document.createElement("p");
+                empty.className = "empty-log";
+                empty.textContent = "Open the move list to review notation. Use Go Back to return to the position before your last move.";
+                moveLogElement.appendChild(empty);
+                return;
+            }
+
+            const rows = state.notation_log || [];
+
+            if (!rows.length) {
+                moveLogElement.classList.add("pre-game-empty");
+                return;
+            }
+
+            rows.forEach((row) => {
+                const moveRow = document.createElement("div");
+                moveRow.className = "move-row";
+                moveRow.innerHTML = `<span>${row.number}.</span><strong>${row.white || ""}</strong><strong>${row.black || ""}</strong>`;
+                moveLogElement.appendChild(moveRow);
+            });
+        }
+
+        function renderStatus() {
+            if (tutorialActive) {
+                const step = currentTutorialStep();
+                const readingWaitMs = currentReadingWaitMs();
+                const readingWaitSeconds = Math.ceil(readingWaitMs / 1000);
+                const readingLocked = readingWaitMs > 0;
+                movePillElement.textContent = `Lesson ${tutorialStepIndex + 1}`;
+                statusElement.textContent = "Skip tutorial";
+                statusElement.classList.add("next-ready");
+                undoButtonElement.disabled = tutorialStepIndex === 0 || busy;
+                undoButtonElement.textContent = "Back";
+                moveLogToggleElement.disabled = (!tutorialStepSolved && step.type !== "reading") || busy;
+                moveLogToggleElement.textContent = tutorialStepIndex === tutorialSteps.length - 1 ? "★ Start" : "★";
+                if (step.type === "reading" && !tutorialStepSolved) {
+                    moveLogToggleElement.disabled = readingLocked || busy;
+                    moveLogToggleElement.textContent = readingLocked ? `${readingWaitSeconds}s` : "★";
+                }
+                setupOverlayElement.hidden = true;
+                openingsButtonElement.hidden = true;
+                scheduleReadingStepTimer();
+                return;
+            }
+
+            const sideText = state.player_color === "black" ? "Black" : "White";
+            movePillElement.textContent = `Move ${state.move_number}`;
+            statusElement.textContent = state.status_text;
+            statusElement.classList.remove("next-ready");
+            undoButtonElement.disabled = !state.can_undo || busy || state.awaiting_setup;
+            undoButtonElement.textContent = "Go Back";
+            moveLogToggleElement.disabled = Boolean(state.awaiting_setup);
+            moveLogToggleElement.textContent = showMoves ? "Hide Moves" : "Moves";
+            setupOverlayElement.hidden = !state.awaiting_setup;
+            openingsButtonElement.hidden = !openingGuideAvailable();
+            playerMetaElement.textContent = `${state.player_elo} ELO - ${sideText} pieces - guided training - ${state.engine_source}`;
+        }
+
+        function render() {
+            renderBoard();
+            renderCaptures();
+            renderEvaluation();
+            renderFeedback();
+            renderCoachTools();
+            renderMoveLog();
+            renderStatus();
+        }
+
+        undoButtonElement.addEventListener("click", () => {
+            if (tutorialActive) {
+                previousTutorialStep();
+                return;
+            }
+
+            undoMove();
+        });
+        speakButtonElement.addEventListener("click", () => speakTutorMessage());
+        voiceSelectElement.addEventListener("change", () => {
+            localStorage.setItem(voiceStorageKey, voiceSelectElement.value);
+            speakTutorMessage();
+        });
+        autoSpeakToggleElement.addEventListener("change", () => {
+            localStorage.setItem("chessTutorAutoSpeak", autoSpeakToggleElement.checked ? "true" : "false");
+        });
+        openingsButtonElement.addEventListener("click", openOpeningGuide);
+        openingCloseElement.addEventListener("click", closeOpeningGuide);
+        openingOverlayElement.addEventListener("click", (event) => {
+            if (event.target === openingOverlayElement) {
+                closeOpeningGuide();
+            }
+        });
+        window.addEventListener("keydown", (event) => {
+            if (event.key === "Escape" && !openingOverlayElement.hidden) {
+                closeOpeningGuide();
+            }
+        });
+        moveLogToggleElement.addEventListener("click", () => {
+            if (tutorialActive) {
+                nextTutorialStep();
+                return;
+            }
+
+            showMoves = !showMoves;
+            renderMoveLog();
+            renderStatus();
+        });
+        document.querySelectorAll("[data-side]").forEach((button) => {
+            button.addEventListener("click", () => startMatch(button.dataset.side));
+        });
+        statusElement.addEventListener("click", () => {
+            if (tutorialActive) {
+                finishTutorial();
+            }
+        });
+
+        if (localStorage.getItem("chessTutorAutoSpeak") === "false") {
+            autoSpeakToggleElement.checked = false;
+        }
+
+        if ("speechSynthesis" in window) {
+            populateVoiceOptions();
+            window.speechSynthesis.onvoiceschanged = () => {
+                populateVoiceOptions();
+                window.setTimeout(tryInitialAutoSpeak, 250);
+            };
+        }
+
+        if (tutorialActive) {
+            loadTutorialStep(0, false);
+        }
+
+        render();
+        window.setTimeout(tryInitialAutoSpeak, 650);
+        ["click", "keydown", "touchstart"].forEach((eventName) => {
+            window.addEventListener(eventName, tryInitialAutoSpeak, { once: true });
+        });
+    </script>
+</body>
+</html>

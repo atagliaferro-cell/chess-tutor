@@ -1,0 +1,601 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puzzles | Chess Tutor</title>
+    <style>
+        :root {
+            --bg: #020804;
+            --panel: rgba(2, 18, 8, 0.88);
+            --panel-strong: rgba(3, 28, 11, 0.92);
+            --line: rgba(80, 255, 108, 0.28);
+            --green: #50f06a;
+            --green-soft: #9dff9e;
+            --text: #f2f8ef;
+            --muted: #b8c7b3;
+            --light-square: #eeeed2;
+            --dark-square: #779954;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            background:
+                radial-gradient(circle at 65% 15%, rgba(53, 255, 91, 0.18), transparent 34%),
+                radial-gradient(circle at 20% 95%, rgba(53, 255, 91, 0.08), transparent 28%),
+                var(--bg);
+            color: var(--text);
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        body::-webkit-scrollbar-track {
+            background: #020804;
+        }
+
+        body::-webkit-scrollbar-thumb {
+            background: rgba(80, 240, 106, 0.8);
+            border-radius: 999px;
+            border: 3px solid #020804;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .page {
+            width: min(100%, 1540px);
+            min-height: 100vh;
+            margin: 0 auto;
+            padding: 18px 42px 30px;
+        }
+
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 28px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 26px;
+            font-weight: 900;
+        }
+
+        .logo span:last-child {
+            color: var(--green);
+            text-shadow: 0 0 18px rgba(80, 240, 106, 0.45);
+        }
+
+        .logo-mark {
+            display: grid;
+            place-items: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            background: linear-gradient(145deg, #68ff72, #23b64b);
+            color: rgba(231, 255, 226, 0.34);
+            box-shadow: 0 0 28px rgba(80, 240, 106, 0.42);
+            font-size: 25px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 36px;
+            font-size: 16px;
+            font-weight: 800;
+            color: rgba(242, 248, 239, 0.75);
+        }
+
+        .nav-links a {
+            position: relative;
+            padding: 8px 0;
+        }
+
+        .nav-links a.active,
+        .nav-links a:hover {
+            color: var(--green);
+        }
+
+        .nav-links a.active::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -14px;
+            height: 3px;
+            background: var(--green);
+            box-shadow: 0 0 18px rgba(80, 240, 106, 0.75);
+        }
+
+        .auth-links {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-weight: 900;
+        }
+
+        .profile-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .profile-copy {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 8px;
+            line-height: 1;
+        }
+
+        .nav-rating {
+            color: var(--green);
+            font-size: 12px;
+            font-weight: 950;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-avatar {
+            display: grid;
+            place-items: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            background: linear-gradient(145deg, #58f071, #23b94d);
+            color: rgba(231, 255, 226, 0.34);
+            overflow: hidden;
+        }
+
+        .nav-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .auth-button {
+            padding: 10px 18px;
+            border: 1px solid rgba(80, 240, 106, 0.55);
+            border-radius: 6px;
+            color: var(--green);
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 340px;
+            gap: 30px;
+            align-items: end;
+            padding: 24px 0 18px;
+        }
+
+        .eyebrow {
+            margin: 0 0 10px;
+            color: var(--green);
+            font-size: 16px;
+            font-weight: 900;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            max-width: 900px;
+            margin: 0;
+            font-size: clamp(48px, 5.6vw, 78px);
+            line-height: 0.92;
+            letter-spacing: 0;
+        }
+
+        h1 span {
+            color: var(--green);
+            text-shadow: 0 0 28px rgba(80, 240, 106, 0.45);
+        }
+
+        .hero-copy {
+            max-width: 660px;
+            margin: 16px 0 0;
+            color: var(--muted);
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 1.45;
+        }
+
+        .stats-panel {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: rgba(0, 10, 4, 0.72);
+            box-shadow: 0 0 44px rgba(80, 240, 106, 0.1);
+            padding: 16px 18px;
+        }
+
+        .rated-explain {
+            margin: 12px 0 0;
+            padding-top: 12px;
+            border-top: 1px solid rgba(80, 240, 106, 0.18);
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 850;
+            line-height: 1.35;
+        }
+
+        .rated-explain strong {
+            color: var(--green);
+        }
+
+        .stat-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            padding: 9px 0;
+            border-bottom: 1px solid rgba(80, 240, 106, 0.16);
+            color: var(--muted);
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        .stat-row:last-child {
+            border-bottom: 0;
+        }
+
+        .stat-row strong {
+            color: var(--text);
+            font-size: 18px;
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .category-card {
+            position: relative;
+            min-height: 210px;
+            display: grid;
+            grid-template-columns: 120px minmax(0, 1fr);
+            grid-template-areas:
+                "top top"
+                "board body";
+            column-gap: 16px;
+            row-gap: 10px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background:
+                linear-gradient(145deg, rgba(5, 35, 13, 0.88), rgba(0, 8, 4, 0.95)),
+                var(--panel);
+            overflow: hidden;
+            transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+        }
+
+        .category-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(80, 240, 106, 0.72);
+            box-shadow: 0 0 34px rgba(80, 240, 106, 0.2);
+        }
+
+        .category-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            grid-area: top;
+            padding: 14px 14px 0;
+        }
+
+        .number {
+            color: var(--green);
+            font-size: 16px;
+            font-weight: 900;
+            letter-spacing: 2px;
+        }
+
+        .rating {
+            color: var(--green-soft);
+            font-size: 15px;
+            font-weight: 900;
+        }
+
+        .mini-board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            grid-area: board;
+            width: 120px;
+            height: 120px;
+            aspect-ratio: 1;
+            min-width: 120px;
+            margin: 0 0 14px 14px;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .mini-square {
+            position: relative;
+            display: grid;
+            place-items: center;
+            min-width: 0;
+            min-height: 0;
+        }
+
+        .mini-square.light {
+            background: var(--light-square);
+        }
+
+        .mini-square.dark {
+            background: var(--dark-square);
+        }
+
+        .mini-piece {
+            width: 92%;
+            height: 92%;
+            object-fit: contain;
+            filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.45));
+        }
+
+        .card-body {
+            grid-area: body;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            padding: 2px 14px 14px 0;
+        }
+
+        .card-body h2 {
+            margin: 0 0 6px;
+            font-size: 22px;
+            line-height: 1.05;
+            overflow-wrap: anywhere;
+        }
+
+        .meta {
+            margin: 0 0 8px;
+            color: var(--green);
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .description {
+            min-height: 0;
+            margin: 0 0 12px;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 1.35;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .train-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            margin-top: auto;
+        }
+
+        .train-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .solution {
+            color: rgba(242, 248, 239, 0.72);
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        .rated-progress {
+            display: block;
+            margin-top: 4px;
+            color: var(--green-soft);
+            font-size: 11px;
+            font-weight: 950;
+        }
+
+        .train-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 70px;
+            min-height: 36px;
+            padding: 0 12px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #65f36d, #27c951);
+            color: #031007;
+            font-weight: 950;
+        }
+
+        .rated-button {
+            border: 1px solid rgba(80, 240, 106, 0.55);
+            background: rgba(4, 28, 10, 0.92);
+            color: var(--green);
+        }
+
+        @media (max-width: 1280px) {
+            .hero {
+                grid-template-columns: 1fr;
+            }
+
+            .category-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .stats-panel {
+                grid-column: 1 / -1;
+            }
+        }
+
+        @media (max-width: 980px) {
+            .category-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 760px) {
+            .page {
+                padding: 20px 16px 34px;
+            }
+
+            .navbar {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .nav-links {
+                width: 100%;
+                gap: 22px;
+                overflow-x: auto;
+                padding-bottom: 6px;
+            }
+
+            .auth-links {
+                width: 100%;
+            }
+
+            .hero,
+            .category-grid {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: clamp(48px, 16vw, 68px);
+            }
+        }
+
+
+        /* Keep the site mark consistent across every page. */
+        .logo-mark,
+        .brand-mark {
+            color: rgba(231, 255, 226, 0.34) !important;
+            text-shadow: 0 0 10px rgba(240, 255, 236, 0.18);
+        }
+
+        .nav-avatar {
+            color: #061107;
+        }
+    </style>
+</head>
+<body>
+    <main class="page">
+                <!-- Puzzle navbar matches the rest of the site for visual consistency. -->
+<nav class="navbar">
+            <a href="{% url 'home' %}" class="logo">
+                <span class="logo-mark">♞</span>
+                Chess <span>Tutor</span>
+            </a>
+
+            <div class="nav-links">
+                <a href="{% url 'play' %}">Play</a>
+                <a href="{% url 'tutors' %}">Tutors</a>
+                <a href="{% url 'puzzles' %}" class="active">Puzzles</a>
+                <a href="{% url 'dashboard' %}">Dashboard</a>
+            </div>
+
+            <div class="auth-links">
+                <span class="profile-link">
+                    <span class="nav-avatar">
+                        {% if account_profile.avatar %}
+                            <img src="{{ account_profile.avatar.url }}" alt="{{ request.user.username }} profile picture">
+                        {% else %}
+                            {{ request.user.username|slice:":2"|upper }}
+                        {% endif %}
+                    </span>
+                    <span class="profile-copy">
+                        <span>{{ request.user.username }}</span>
+                    </span>
+                </span>
+                <a href="{% url 'account_settings' %}" class="auth-button">Settings</a>
+            </div>
+        </nav>
+
+        
+        <!-- Puzzle hero explains rated training before the category cards. -->
+<section class="hero">
+            <div>
+                <p class="eyebrow">Puzzle Training</p>
+                <h1>Choose a <span>tactic.</span><br>Solve the position.</h1>
+                <p class="hero-copy">Train each skill through short puzzle lines: you move, the opponent replies, then you finish the tactic.</p>
+            </div>
+
+            <aside class="stats-panel" aria-label="Puzzle progress">
+                <div class="stat-row">
+                    <span>Puzzle Rating</span>
+                    <strong>{{ puzzle_rating }}</strong>
+                </div>
+                <div class="stat-row">
+                    <span>Categories</span>
+                    <strong>{{ total_categories }}</strong>
+                </div>
+                <div class="stat-row">
+                    <span>Puzzles</span>
+                    <strong>{{ total_puzzles }}</strong>
+                </div>
+                <p class="rated-explain"><strong>Rated:</strong> +10 ELO for a perfect puzzle, -5 if you miss the line or use help. Each puzzle can only change your rating once.</p>
+            </aside>
+        </section>
+
+        <section class="category-grid" aria-label="Puzzle categories">
+                                <!-- Each puzzle category trains one repeatable chess skill. -->
+{% for category in categories %}
+                <article class="category-card">
+                    <div class="category-top">
+                        <span class="number">{{ category.number }}</span>
+                        <span class="rating">{{ category.rating }} ELO</span>
+                    </div>
+
+                    <div class="mini-board" aria-hidden="true">
+                        {% for square in category.preview_squares %}
+                            <div class="mini-square {% if square.light %}light{% else %}dark{% endif %}">
+                                {% if square.piece %}
+                                    <img class="mini-piece" src="{% static 'main/pieces/neo/'|add:square.piece|add:'.png' %}" alt="">
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="card-body">
+                        <h2>{{ category.name }}</h2>
+                        <p class="meta">{{ category.level }} focus</p>
+                        <p class="description">{{ category.objective }}</p>
+                        <div class="train-row">
+                            <span class="solution">
+                                {{ category.puzzle_count }} puzzles
+                                <span class="rated-progress">Rated {{ category.rated_completed }}/{{ category.puzzle_count }}</span>
+                            </span>
+                            <span class="train-actions">
+                                <a href="{% url 'puzzle_detail' category.slug %}" class="train-button">Train</a>
+                                {% if category.rated_available %}
+                                    <a href="{% url 'puzzle_detail' category.slug %}?rated=1" class="train-button rated-button">Rated</a>
+                                {% else %}
+                                    <a href="{% url 'puzzle_detail' category.slug %}" class="train-button rated-button">Done</a>
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </article>
+            {% endfor %}
+        </section>
+    </main>
+</body>
+</html>

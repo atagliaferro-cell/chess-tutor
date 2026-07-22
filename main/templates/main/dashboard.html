@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Chess Tutor</title>
+    <style>
+        :root {
+            --bg: #020806;
+            --panel: rgba(3, 24, 10, 0.82);
+            --panel-strong: rgba(4, 34, 14, 0.94);
+            --line: rgba(75, 255, 105, 0.28);
+            --line-bright: rgba(85, 255, 115, 0.65);
+            --green: #50ef68;
+            --green-soft: #79ff8c;
+            --text: #f3fbf1;
+            --muted: #b8c8b4;
+            --red: #d34d47;
+            --gold: #c28a2c;
+            --blue: #2f70b9;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--text);
+            background:
+                radial-gradient(circle at 64% 26%, rgba(62, 255, 92, 0.18), transparent 34%),
+                radial-gradient(circle at 26% 72%, rgba(62, 255, 92, 0.08), transparent 30%),
+                linear-gradient(120deg, #020806 0%, #03130a 42%, #020806 100%);
+            font-family: Arial, Helvetica, sans-serif;
+            overflow-x: hidden;
+        }
+
+        body::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        body::-webkit-scrollbar-track {
+            background: #020806;
+        }
+
+        body::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--green), #1f8c36);
+            border-radius: 999px;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .page {
+            width: min(1500px, calc(100vw - 84px));
+            margin: 0 auto;
+            padding: 18px 0 24px;
+        }
+
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 28px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 26px;
+            font-weight: 900;
+            letter-spacing: 0;
+        }
+
+        .logo span:last-child,
+        .nav-links .active,
+        .eyebrow,
+        .accent {
+            color: var(--green);
+        }
+
+        .logo-mark,
+        .nav-avatar {
+            display: grid;
+            place-items: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #7cff82, #1f8f45);
+            color: rgba(231, 255, 226, 0.34);
+            box-shadow: 0 0 28px rgba(80, 239, 104, 0.46);
+            font-size: 25px;
+            font-weight: 900;
+            overflow: hidden;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 36px;
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--muted);
+        }
+
+        .nav-links a {
+            position: relative;
+            padding: 8px 0;
+        }
+
+        .nav-links .active::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -14px;
+            height: 3px;
+            background: var(--green);
+            box-shadow: 0 0 18px rgba(80, 239, 104, 0.7);
+        }
+
+        .auth-links,
+        .profile-link,
+        .profile-copy {
+            display: flex;
+            align-items: center;
+        }
+
+        .auth-links {
+            gap: 14px;
+            font-size: 16px;
+            font-weight: 900;
+        }
+
+        .profile-link {
+            gap: 12px;
+        }
+
+        .nav-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .nav-avatar {
+            width: 34px;
+            height: 34px;
+            font-size: 0.82rem;
+        }
+
+        .profile-copy {
+            flex-direction: row;
+            align-items: baseline;
+            gap: 8px;
+            line-height: 1;
+        }
+
+        .nav-rating {
+            color: var(--green-soft);
+            font-size: 12px;
+            font-weight: 950;
+            text-transform: uppercase;
+        }
+
+        .auth-button {
+            padding: 10px 18px;
+            border: 1px solid var(--line-bright);
+            border-radius: 6px;
+            color: var(--green-soft);
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: end;
+            gap: 22px;
+            padding: 16px 0 12px;
+        }
+
+        .eyebrow {
+            margin: 0 0 8px;
+            font-size: 14px;
+            font-weight: 900;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(36px, 4vw, 56px);
+            line-height: 0.95;
+            letter-spacing: 0;
+        }
+
+        .hero-copy {
+            max-width: 700px;
+            margin: 10px 0 0;
+            color: var(--muted);
+            font-size: 16px;
+            font-weight: 700;
+            line-height: 1.35;
+        }
+
+        .summary-card {
+            min-width: 300px;
+            padding: 14px 16px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: rgba(2, 12, 7, 0.72);
+            box-shadow: 0 0 34px rgba(80, 239, 104, 0.12);
+        }
+
+        .summary-row,
+        .activity-row,
+        .metric-row,
+        .mode-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .summary-row {
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(80, 239, 104, 0.16);
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .summary-row:last-child {
+            border-bottom: 0;
+        }
+
+        .summary-row strong {
+            color: var(--text);
+            font-size: 16px;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .stat-card,
+        .panel {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--panel);
+            box-shadow: 0 0 38px rgba(80, 239, 104, 0.08);
+        }
+
+        .stat-card {
+            min-height: 94px;
+            padding: 14px 16px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .stat-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            opacity: 0.22;
+        }
+
+        .stat-card.green::before {
+            background: linear-gradient(135deg, var(--green), transparent 60%);
+        }
+
+        .stat-card.gold::before {
+            background: linear-gradient(135deg, var(--gold), transparent 60%);
+        }
+
+        .stat-card.blue::before {
+            background: linear-gradient(135deg, var(--blue), transparent 60%);
+        }
+
+        .stat-card.split::before {
+            background: linear-gradient(90deg, rgba(80, 239, 104, 0.42) 0 58%, rgba(211, 77, 71, 0.48) 58% 100%);
+        }
+
+        .stat-card > * {
+            position: relative;
+        }
+
+        .stat-value {
+            font-size: clamp(30px, 3.1vw, 44px);
+            line-height: 1;
+            font-weight: 900;
+        }
+
+        .stat-label {
+            margin-top: 6px;
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .stat-caption {
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.35;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.08fr) minmax(350px, 0.92fr);
+            gap: 14px;
+            margin-top: 12px;
+        }
+
+        .panel {
+            min-height: 0;
+            padding: 14px 16px;
+        }
+
+        .panel h2 {
+            margin: 0 0 10px;
+            font-size: 22px;
+            line-height: 1;
+        }
+
+        .radar-wrap {
+            display: grid;
+            grid-template-columns: minmax(260px, 330px) minmax(250px, 1fr);
+            gap: 14px;
+            align-items: center;
+        }
+
+        .radar {
+            width: 100%;
+            max-width: 320px;
+            margin: 0 auto;
+        }
+
+        .radar-grid {
+            fill: none;
+            stroke: rgba(231, 241, 226, 0.18);
+            stroke-width: 1.4;
+        }
+
+        .radar-axis {
+            stroke: rgba(231, 241, 226, 0.16);
+            stroke-width: 1;
+        }
+
+        .radar-fill {
+            fill: rgba(80, 239, 104, 0.22);
+            stroke: var(--green);
+            stroke-width: 4;
+            filter: drop-shadow(0 0 12px rgba(80, 239, 104, 0.58));
+        }
+
+        .radar-label {
+            fill: var(--muted);
+            font-size: 11px;
+            font-weight: 900;
+        }
+
+        .skill-list {
+            display: grid;
+            gap: 8px;
+        }
+
+        .metric-row {
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 900;
+        }
+
+        .metric-row span:first-child {
+            width: 124px;
+        }
+
+        .bar {
+            flex: 1;
+            height: 8px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: rgba(80, 239, 104, 0.15);
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, var(--green), var(--green-soft));
+            box-shadow: 0 0 18px rgba(80, 239, 104, 0.5);
+        }
+
+        .activity-list {
+            display: grid;
+            gap: 8px;
+            max-height: 100%;
+        }
+
+        .activity-row {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(80, 239, 104, 0.16);
+        }
+
+        .activity-row:last-child {
+            border-bottom: 0;
+        }
+
+        .activity-title {
+            margin: 0 0 4px;
+            font-size: 14px;
+            font-weight: 900;
+        }
+
+        .activity-body {
+            margin: 0;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.35;
+        }
+
+        .activity-meta {
+            color: var(--green-soft);
+            font-size: 12px;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 1180px) {
+            body {
+                height: auto;
+                min-height: 100vh;
+                overflow: auto;
+            }
+
+            .page {
+                height: auto;
+            }
+
+            .stat-grid,
+            .dashboard-grid,
+            .radar-wrap {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-card {
+                min-width: 0;
+            }
+        }
+
+        @media (max-width: 760px) {
+            .page {
+                width: min(100% - 32px, 1500px);
+                padding-top: 18px;
+            }
+
+            .navbar,
+            .hero {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .navbar,
+            .auth-links {
+                flex-wrap: wrap;
+            }
+
+            .nav-links {
+                width: 100%;
+                gap: 22px;
+                overflow-x: auto;
+            }
+
+            .hero,
+            .stat-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+
+        /* Keep the site mark consistent across every page. */
+        .logo-mark,
+        .brand-mark {
+            color: rgba(231, 255, 226, 0.34) !important;
+            text-shadow: 0 0 10px rgba(240, 255, 236, 0.18);
+        }
+
+        .nav-avatar {
+            color: #061107;
+        }
+    </style>
+</head>
+<body>
+    <main class="page">
+                <!-- Dashboard navbar uses the same spacing as play, tutor and puzzle pages. -->
+<nav class="navbar">
+            <a href="{% url 'home' %}" class="logo">
+                <span class="logo-mark">♞</span>
+                Chess <span>Tutor</span>
+            </a>
+
+            <div class="nav-links">
+                <a href="{% url 'play' %}">Play</a>
+                <a href="{% url 'tutors' %}">Tutors</a>
+                <a href="{% url 'puzzles' %}">Puzzles</a>
+                <a href="{% url 'dashboard' %}" class="active">Dashboard</a>
+            </div>
+
+            <div class="auth-links">
+                <span class="profile-link">
+                    <span class="nav-avatar">
+                        {% if account_profile.avatar %}
+                            <img src="{{ account_profile.avatar.url }}" alt="{{ request.user.username }} profile picture">
+                        {% else %}
+                            {{ request.user.username|slice:":2"|upper }}
+                        {% endif %}
+                    </span>
+                    <span class="profile-copy">
+                        <span>{{ request.user.username }}</span>
+                    </span>
+                </span>
+                <a href="{% url 'account_settings' %}" class="auth-button">Settings</a>
+            </div>
+        </nav>
+
+        
+        <!-- Dashboard hero summarises progress before detailed statistics. -->
+<section class="hero">
+            <div>
+                <p class="eyebrow">Player Dashboard</p>
+                <h1>Track every <span class="accent">game.</span><br>Improve faster.</h1>
+                <p class="hero-copy">Bot ladder, tutor games and rated puzzles feed into one progress view for wins, reviews and skill growth.</p>
+            </div>
+
+            <aside class="summary-card">
+                <div class="summary-row">
+                    <span>Next bot</span>
+                    <strong>{{ active_bot.name }}</strong>
+                </div>
+                <div class="summary-row">
+                    <span>Bot ladder</span>
+                    <strong>{{ bots_defeated }}/{{ total_bots }}</strong>
+                </div>
+                <div class="summary-row">
+                    <span>Tracked results</span>
+                    <strong>{{ tracked_results }}</strong>
+                </div>
+            </aside>
+        </section>
+
+        
+        <!-- Stat cards turn stored results into quick progress indicators. -->
+<section class="stat-grid">
+            {% for stat in dashboard_stats %}
+                <article class="stat-card {{ stat.tone }}">
+                    <div class="stat-value">{{ stat.value }}</div>
+                    <div class="stat-label">{{ stat.label }}</div>
+                    <div class="stat-caption">{{ stat.caption }}</div>
+                </article>
+            {% endfor %}
+        </section>
+
+        
+        <!-- Dashboard grid combines radar skills with recent activity. -->
+<section class="dashboard-grid">
+            <article class="panel">
+                <h2>Skill Profile</h2>
+                <div class="radar-wrap">
+                    <svg class="radar" viewBox="0 0 340 340" role="img" aria-label="Chess skill radar chart">
+                        {% for ring in radar_rings %}
+                            <polygon class="radar-grid" points="{{ ring }}"></polygon>
+                        {% endfor %}
+                        {% for skill in radar_rows %}
+                            <line class="radar-axis" x1="170" y1="170" x2="{{ skill.axis_x }}" y2="{{ skill.axis_y }}"></line>
+                            <text class="radar-label" x="{{ skill.label_x }}" y="{{ skill.label_y }}" text-anchor="{{ skill.anchor }}">{{ skill.short }}</text>
+                        {% endfor %}
+                        <polygon class="radar-fill" points="{{ radar_polygon }}"></polygon>
+                    </svg>
+
+                    <div class="skill-list">
+                        {% for skill in skill_rows %}
+                            <div class="metric-row">
+                                <span>{{ skill.name }}</span>
+                                <div class="bar">
+                                    <div class="bar-fill" style="width: {{ skill.value }}%;"></div>
+                                </div>
+                                <strong>{{ skill.value }}</strong>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </article>
+
+            <article class="panel">
+                <h2>Recent Activity</h2>
+                <div class="activity-list">
+                    {% for item in recent_activity %}
+                        <div class="activity-row">
+                            <div>
+                                <p class="activity-title">{{ item.title }}</p>
+                                <p class="activity-body">{{ item.body }}</p>
+                            </div>
+                            <span class="activity-meta">{{ item.meta }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </article>
+        </section>
+
+    </main>
+</body>
+</html>

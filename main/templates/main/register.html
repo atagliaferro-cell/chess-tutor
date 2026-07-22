@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register | Chess Tutor</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at 76% 18%, rgba(58, 220, 88, 0.18), transparent 34%),
+                radial-gradient(circle at 18% 78%, rgba(58, 220, 88, 0.08), transparent 32%),
+                #050806;
+            color: #f4f7f2;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .page {
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 440px;
+            align-items: center;
+            gap: 70px;
+            padding: 48px 72px;
+        }
+
+        .brand {
+            position: absolute;
+            top: 26px;
+            left: 42px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 26px;
+            font-weight: 900;
+        }
+
+        .brand-mark {
+            width: 38px;
+            height: 38px;
+            display: grid;
+            place-items: center;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #7cff82, #1f8f45);
+            color: #061107;
+            font-size: 25px;
+            box-shadow: 0 0 28px rgba(84, 255, 122, 0.45);
+        }
+
+        .brand span {
+            color: #52e262;
+        }
+
+        .intro {
+            max-width: 690px;
+        }
+
+        .intro h1 {
+            max-width: 700px;
+            font-size: clamp(42px, 5.4vw, 74px);
+            line-height: 0.98;
+            font-weight: 900;
+        }
+
+        .intro h1 span {
+            color: #52e262;
+            text-shadow: 0 0 34px rgba(82, 226, 98, 0.42);
+        }
+
+        .intro p {
+            max-width: 520px;
+            margin-top: 22px;
+            color: #c6d0c3;
+            font-size: 19px;
+            line-height: 1.55;
+        }
+
+        .auth-card {
+            width: 100%;
+            padding: 34px;
+            border: 1px solid rgba(99, 240, 111, 0.3);
+            border-radius: 10px;
+            background: linear-gradient(145deg, rgba(5, 24, 10, 0.96), rgba(2, 10, 6, 0.98));
+            box-shadow:
+                0 32px 80px rgba(0, 0, 0, 0.48),
+                0 0 48px rgba(82, 226, 98, 0.15);
+        }
+
+        .auth-card h2 {
+            margin-bottom: 8px;
+            font-size: 30px;
+        }
+
+        .auth-card .subtext {
+            margin-bottom: 24px;
+            color: #aeb8aa;
+            line-height: 1.5;
+        }
+
+        .field {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #dfe8dc;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        input {
+            width: 100%;
+            min-height: 48px;
+            padding: 0 14px;
+            border: 1px solid rgba(99, 240, 111, 0.24);
+            border-radius: 6px;
+            outline: none;
+            background: rgba(3, 14, 7, 0.9);
+            color: #ffffff;
+            font-size: 16px;
+        }
+
+        input:focus {
+            border-color: rgba(99, 240, 111, 0.7);
+            box-shadow: 0 0 0 3px rgba(99, 240, 111, 0.12);
+        }
+
+        .helptext,
+        .helptext ul {
+            margin-top: 8px;
+            color: #8f9a8b;
+            font-size: 12px;
+            line-height: 1.45;
+        }
+
+        .helptext ul {
+            padding-left: 18px;
+        }
+
+        .error-list,
+        .field-error {
+            margin-top: 8px;
+            color: #ff8f8f;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .error-list {
+            margin-bottom: 18px;
+            padding: 12px;
+            border-left: 3px solid #ff8f8f;
+            background: rgba(255, 143, 143, 0.08);
+        }
+
+        .button {
+            width: 100%;
+            min-height: 50px;
+            margin-top: 8px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #6df36f, #2fb84b);
+            color: #051006;
+            font-size: 16px;
+            font-weight: 900;
+            box-shadow: 0 0 28px rgba(82, 226, 98, 0.28);
+        }
+
+        .switch-link {
+            margin-top: 22px;
+            color: #aeb8aa;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        .switch-link a {
+            color: #63f06f;
+            font-weight: 900;
+        }
+
+        .switch-button {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 44px;
+            margin-top: 12px;
+            padding: 0 18px;
+            border: 1px solid rgba(99, 240, 111, 0.45);
+            border-radius: 6px;
+            background: rgba(99, 240, 111, 0.08);
+        }
+
+        @media (max-width: 900px) {
+            .page {
+                grid-template-columns: 1fr;
+                gap: 34px;
+                padding: 100px 24px 40px;
+            }
+
+            .brand {
+                left: 24px;
+            }
+        }
+
+
+        /* Keep the site mark consistent across every page. */
+        .logo-mark,
+        .brand-mark {
+            color: rgba(231, 255, 226, 0.34) !important;
+            text-shadow: 0 0 10px rgba(240, 255, 236, 0.18);
+        }
+
+        .nav-avatar {
+            color: #061107;
+        }
+    </style>
+</head>
+
+<body>
+    <a href="/" class="brand">
+        <span class="brand-mark">♞</span>
+        Chess <span>Tutor</span>
+    </a>
+
+    <main class="page">
+        <section class="intro">
+            <h1>
+                Start Your<br>
+                Chess <span>Training.</span>
+            </h1>
+
+            <p>
+                Create an account so Chess Tutor can save your selected tutor, puzzle progress and skill tracking.
+            </p>
+        </section>
+
+        <section class="auth-card">
+            <h2>Register</h2>
+            <p class="subtext">Create your Chess Tutor account.</p>
+
+            <form method="post">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="error-list">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="field">
+                    <label for="{{ form.username.id_for_label }}">Username</label>
+                    {{ form.username }}
+                    {% if form.username.help_text %}
+                        <div class="helptext">{{ form.username.help_text }}</div>
+                    {% endif %}
+                    {% for error in form.username.errors %}
+                        <p class="field-error">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <div class="field">
+                    <label for="{{ form.email.id_for_label }}">Email</label>
+                    {{ form.email }}
+                    {% if form.email.help_text %}
+                        <div class="helptext">{{ form.email.help_text }}</div>
+                    {% endif %}
+                    {% for error in form.email.errors %}
+                        <p class="field-error">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <div class="field">
+                    <label for="{{ form.password1.id_for_label }}">Password</label>
+                    {{ form.password1 }}
+                    {% if form.password1.help_text %}
+                        <div class="helptext">{{ form.password1.help_text }}</div>
+                    {% endif %}
+                    {% for error in form.password1.errors %}
+                        <p class="field-error">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <div class="field">
+                    <label for="{{ form.password2.id_for_label }}">Confirm Password</label>
+                    {{ form.password2 }}
+                    {% if form.password2.help_text %}
+                        <div class="helptext">{{ form.password2.help_text }}</div>
+                    {% endif %}
+                    {% for error in form.password2.errors %}
+                        <p class="field-error">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <button type="submit" class="button">Create Account</button>
+            </form>
+
+            <p class="switch-link">
+                Already have an account? Log in here:
+                <br>
+                <a href="{% url 'login' %}" class="switch-button">Login</a>
+            </p>
+        </section>
+    </main>
+</body>
+</html>

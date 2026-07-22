@@ -1,0 +1,2232 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ bot.name }} - {{ theme.name }} | Chess Tutor</title>
+    <style>
+        :root {
+            --bg: #050806;
+            --panel: rgba(5, 24, 10, 0.94);
+            --panel-soft: rgba(8, 30, 13, 0.82);
+            --text: #f3f6ef;
+            --muted: #bdc8ba;
+            --green: #52e262;
+            --green-bright: #63f06f;
+            --line: rgba(84, 255, 122, 0.16);
+            --light-square: #eeeed2;
+            --dark-square: #769656;
+            --danger: #ff7070;
+            --board-size: min(calc(100vh - 230px), calc(100vw - 500px), 940px);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(99, 240, 111, 0.92) rgba(5, 24, 10, 0.82);
+        }
+
+        *::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+
+        *::-webkit-scrollbar-track {
+            background: rgba(5, 24, 10, 0.82);
+            border-radius: 999px;
+        }
+
+        *::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #63f06f, #238c3f);
+            border: 3px solid rgba(5, 24, 10, 0.82);
+            border-radius: 999px;
+        }
+
+        *::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #83ff8d, #31ba53);
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 63% 20%, rgba(58, 220, 88, 0.18), transparent 34%),
+                radial-gradient(circle at 12% 82%, rgba(58, 220, 88, 0.08), transparent 32%),
+                #050806;
+            color: var(--text);
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .game-page {
+            height: 100vh;
+            overflow: hidden;
+            padding: 18px 42px 12px;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(84, 255, 122, 0.14);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 26px;
+            font-weight: 900;
+            color: #ffffff;
+        }
+
+        .logo-mark,
+        .avatar,
+        .bot-avatar {
+            display: grid;
+            place-items: center;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #7cff82, #1f8f45);
+            color: rgba(231, 255, 226, 0.34);
+            font-weight: 900;
+            box-shadow: 0 0 28px rgba(84, 255, 122, 0.35);
+        }
+
+        .logo-mark {
+            width: 38px;
+            height: 38px;
+            font-size: 25px;
+        }
+
+        .logo span {
+            color: #52e262;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 36px;
+            color: #c8d0c4;
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .nav-links a {
+            position: relative;
+            padding: 8px 0;
+        }
+
+        .nav-links a:hover,
+        .nav-links .active {
+            color: #63f06f;
+        }
+
+        .nav-links .active::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -14px;
+            height: 3px;
+            background: #53e35f;
+            box-shadow: 0 0 18px rgba(83, 227, 95, 0.8);
+        }
+
+        .auth-links {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+        }
+
+        .auth-user {
+            color: #ffffff;
+            font-weight: 800;
+        }
+
+        .profile-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-avatar {
+            width: 34px;
+            height: 34px;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #7cff82, #1f8f45);
+            color: rgba(231, 255, 226, 0.34);
+            font-size: 0.82rem;
+            font-weight: 900;
+            box-shadow: 0 0 18px rgba(84, 255, 122, 0.32);
+        }
+
+        .nav-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .auth-button {
+            padding: 10px 18px;
+            border: 1px solid rgba(99, 240, 111, 0.45);
+            border-radius: 6px;
+            color: #63f06f;
+            font-weight: 800;
+            background: rgba(99, 240, 111, 0.08);
+        }
+
+        .game-shell {
+            max-width: 1540px;
+            margin: 0 auto;
+            padding-top: 10px;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 390px;
+            gap: 22px;
+            align-items: start;
+        }
+
+        .board-column {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .match-top,
+        .player-strip {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .match-top {
+            width: var(--board-size);
+            max-width: 100%;
+            margin-bottom: 7px;
+        }
+
+        .player-strip {
+            justify-content: flex-start;
+        }
+
+        .avatar,
+        .bot-avatar {
+            width: 44px;
+            height: 44px;
+            overflow: hidden;
+        }
+
+        .bot-avatar.image {
+            background: #101410;
+            border: 1px solid rgba(99, 240, 111, 0.24);
+            box-shadow: 0 0 24px rgba(84, 255, 122, 0.18);
+        }
+
+        .avatar.image {
+            background: #101410;
+            border: 1px solid rgba(99, 240, 111, 0.24);
+        }
+
+        .avatar img,
+        .bot-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .player-name {
+            margin: 0;
+            font-size: 1.05rem;
+            font-weight: 900;
+        }
+
+        .player-meta {
+            margin: 2px 0 0;
+            color: var(--muted);
+            font-size: 0.8rem;
+            font-weight: 800;
+        }
+
+        .captured-row {
+            min-height: 18px;
+            margin-top: 3px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .captured-row img {
+            width: 16px;
+            height: 16px;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.34));
+            margin-left: -5px;
+        }
+
+        .captured-row img:first-child {
+            margin-left: 0;
+        }
+
+        .capture-score {
+            margin-left: 8px;
+            color: var(--muted);
+            font-size: 0.92rem;
+            font-weight: 900;
+        }
+
+        .position-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 40px;
+            padding: 0 14px;
+            border: 1px solid rgba(99, 240, 111, 0.35);
+            border-radius: 999px;
+            background: rgba(99, 240, 111, 0.08);
+            color: var(--green-bright);
+            font-size: 0.82rem;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .board-frame {
+            width: var(--board-size);
+            max-width: 100%;
+            padding: 8px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: linear-gradient(145deg, rgba(5, 24, 10, 0.95), rgba(2, 10, 6, 0.97));
+            border: 1px solid rgba(99, 240, 111, 0.34);
+            box-shadow:
+                0 32px 80px rgba(0, 0, 0, 0.5),
+                0 0 48px rgba(82, 226, 98, 0.18);
+        }
+
+        .board-area {
+            position: relative;
+            width: var(--board-size);
+            max-width: 100%;
+        }
+
+        .eval-rail {
+            position: absolute;
+            top: 8px;
+            bottom: 8px;
+            left: -30px;
+            width: 18px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: #1b1f1b;
+            border: 1px solid rgba(99, 240, 111, 0.28);
+            box-shadow: 0 0 18px rgba(82, 226, 98, 0.12);
+        }
+
+        .eval-white {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 50%;
+            background: #f3f6ef;
+            transition: height 240ms ease;
+        }
+
+        .eval-tag {
+            position: absolute;
+            left: -54px;
+            top: -28px;
+            min-width: 72px;
+            padding: 5px 8px;
+            border-radius: 999px;
+            background: rgba(5, 24, 10, 0.92);
+            border: 1px solid rgba(99, 240, 111, 0.26);
+            color: var(--green-bright);
+            font-size: 0.72rem;
+            font-weight: 900;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .board {
+            width: 100%;
+            aspect-ratio: 1;
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            overflow: hidden;
+            border-radius: 6px;
+            background: var(--dark-square);
+            box-shadow:
+                inset 0 0 0 1px rgba(0, 0, 0, 0.42),
+                0 16px 36px rgba(0, 0, 0, 0.35);
+        }
+
+        .square {
+            position: relative;
+            display: grid;
+            place-items: center;
+            min-width: 0;
+            min-height: 0;
+            padding: 0;
+            border: 0;
+            appearance: none;
+            cursor: pointer;
+            font: inherit;
+        }
+
+        .square.light {
+            background: var(--light-square);
+        }
+
+        .square.dark {
+            background: var(--dark-square);
+        }
+
+        .square.last-move::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 242, 102, 0.32);
+            z-index: 1;
+        }
+
+        .square.selected {
+            box-shadow: inset 0 0 0 4px rgba(82, 226, 98, 0.88);
+        }
+
+        .square.legal-target::after {
+            content: "";
+            position: absolute;
+            width: 26%;
+            height: 26%;
+            border-radius: 999px;
+            background: rgba(17, 31, 12, 0.38);
+            z-index: 4;
+        }
+
+        .square.legal-target.has-piece::after {
+            width: 78%;
+            height: 78%;
+            background: transparent;
+            border: 5px solid rgba(17, 31, 12, 0.36);
+        }
+
+        .piece {
+            width: 90%;
+            height: 90%;
+            object-fit: contain;
+            filter: drop-shadow(0 7px 6px rgba(0, 0, 0, 0.28));
+            user-select: none;
+            pointer-events: auto;
+            z-index: 2;
+        }
+
+        .piece.draggable-piece {
+            cursor: grab;
+        }
+
+        .piece.dragging-piece {
+            opacity: 0.76;
+            cursor: grabbing;
+        }
+
+        .coord {
+            position: absolute;
+            z-index: 3;
+            font-size: clamp(0.58rem, 0.9vw, 0.82rem);
+            line-height: 1;
+            font-weight: 900;
+            color: rgba(79, 129, 58, 0.98);
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .rank-label {
+            top: 5px;
+            left: 6px;
+        }
+
+        .file-label {
+            right: 6px;
+            bottom: 5px;
+        }
+
+        .bottom-player {
+            width: var(--board-size);
+            max-width: 100%;
+            margin-top: 7px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: rgba(5, 24, 10, 0.8);
+            border: 1px solid rgba(99, 240, 111, 0.18);
+        }
+
+        .side-panel {
+            height: calc(100vh - 104px);
+            min-height: 0;
+            max-height: calc(100vh - 104px);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-radius: 8px;
+            background: linear-gradient(145deg, rgba(5, 24, 10, 0.94), rgba(2, 10, 6, 0.96));
+            border: 1px solid rgba(99, 240, 111, 0.28);
+            box-shadow:
+                0 28px 70px rgba(0, 0, 0, 0.42),
+                0 0 42px rgba(82, 226, 98, 0.12);
+        }
+
+        .side-header {
+            padding: 16px 20px;
+            background: rgba(1, 8, 4, 0.72);
+            border-bottom: 1px solid var(--line);
+        }
+
+        .side-title {
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 1.55rem;
+            font-weight: 900;
+        }
+
+        .chat-area {
+            padding: 18px 20px;
+            min-height: 180px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .bot-speech {
+            display: grid;
+            grid-template-columns: 58px minmax(0, 1fr);
+            gap: 14px;
+            align-items: end;
+        }
+
+        .bot-speech .bot-avatar {
+            width: 58px;
+            height: 58px;
+        }
+
+        .speech-bubble {
+            position: relative;
+            padding: 15px 16px;
+            border-radius: 8px;
+            background: #f4f6ed;
+            color: #1b241b;
+            font-size: 1rem;
+            line-height: 1.35;
+            font-weight: 900;
+        }
+
+        .speech-bubble::before {
+            content: "";
+            position: absolute;
+            left: -8px;
+            bottom: 16px;
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+            border-right: 8px solid #f4f6ed;
+        }
+
+        .voice-tools {
+            margin-top: 12px;
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr) auto;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .speak-button,
+        .voice-select,
+        .voice-toggle {
+            min-height: 36px;
+            border-radius: 8px;
+            border: 1px solid rgba(99, 240, 111, 0.25);
+            background: rgba(1, 8, 4, 0.72);
+            color: var(--text);
+            font: inherit;
+            font-size: 0.76rem;
+            font-weight: 900;
+        }
+
+        .speak-button {
+            padding: 0 12px;
+            color: var(--green-bright);
+            background: rgba(99, 240, 111, 0.08);
+            cursor: pointer;
+        }
+
+        .voice-select {
+            min-width: 0;
+            padding: 0 10px;
+        }
+
+        .voice-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 0 10px;
+            color: var(--muted);
+            background: rgba(99, 240, 111, 0.08);
+            white-space: nowrap;
+        }
+
+        .bot-profile {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .bot-name-row,
+        .position-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+        }
+
+        .bot-name-row h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 900;
+        }
+
+        .bot-name-row span {
+            color: var(--muted);
+            font-weight: 900;
+        }
+
+        .position-row {
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+            font-weight: 900;
+        }
+
+        .position-row strong {
+            color: #ffffff;
+        }
+
+        .analysis-panel {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+            padding: 14px 20px 16px;
+            border-bottom: 1px solid var(--line);
+            background: rgba(99, 240, 111, 0.045);
+        }
+
+        .analysis-title {
+            margin: 0 0 8px;
+            color: var(--green-bright);
+            font-size: 0.78rem;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .analysis-summary {
+            margin: 0 0 12px;
+            color: #eef6ea;
+            font-size: 0.9rem;
+            font-weight: 800;
+            line-height: 1.35;
+        }
+
+        .review-controls {
+            margin-bottom: 12px;
+            display: grid;
+            grid-template-columns: 68px 1fr 68px;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .review-button,
+        .review-move {
+            min-height: 34px;
+            border-radius: 8px;
+            border: 1px solid rgba(99, 240, 111, 0.22);
+            background: rgba(99, 240, 111, 0.08);
+            color: var(--green-bright);
+            font: inherit;
+            font-size: 0.78rem;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        .review-button:disabled {
+            cursor: default;
+            opacity: 0.42;
+        }
+
+        .review-label {
+            min-height: 34px;
+            display: grid;
+            place-items: center;
+            padding: 0 10px;
+            border-radius: 8px;
+            background: rgba(1, 8, 4, 0.5);
+            color: #ffffff;
+            font-size: 0.8rem;
+            font-weight: 900;
+            text-align: center;
+        }
+
+        .review-move-list {
+            max-height: 128px;
+            margin-bottom: 14px;
+            overflow: auto;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 7px;
+        }
+
+        .review-move {
+            color: var(--muted);
+            text-align: left;
+            padding: 7px 9px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .review-move.active {
+            border-color: rgba(99, 240, 111, 0.72);
+            background: rgba(99, 240, 111, 0.18);
+            color: #ffffff;
+        }
+
+        .analysis-metrics {
+            display: grid;
+            gap: 8px;
+        }
+
+        .analysis-row {
+            display: grid;
+            grid-template-columns: 96px 1fr 34px;
+            gap: 10px;
+            align-items: center;
+            color: var(--muted);
+            font-size: 0.78rem;
+            font-weight: 900;
+        }
+
+        .metric-track {
+            height: 7px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: rgba(99, 240, 111, 0.12);
+        }
+
+        .metric-fill {
+            height: 100%;
+            width: 0%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, #45d756, #82ff8d);
+            box-shadow: 0 0 12px rgba(82, 226, 98, 0.36);
+        }
+
+        .chat-log {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+            padding: 14px 20px;
+            display: grid;
+            align-content: start;
+            gap: 12px;
+        }
+
+        .chat-line {
+            padding: 12px 14px;
+            border-radius: 8px;
+            background: rgba(99, 240, 111, 0.08);
+            border: 1px solid rgba(99, 240, 111, 0.16);
+            color: #e6efe3;
+            font-weight: 800;
+            line-height: 1.4;
+        }
+
+        .chat-line span {
+            display: block;
+            margin-bottom: 4px;
+            color: var(--green-bright);
+            font-size: 0.76rem;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .empty-chat {
+            color: var(--muted);
+            font-size: 0.92rem;
+            font-weight: 800;
+            line-height: 1.45;
+        }
+
+        .error-message {
+            min-height: 24px;
+            margin: 0;
+            padding: 0 20px 12px;
+            color: #ff9a9a;
+            font-size: 0.86rem;
+            font-weight: 900;
+        }
+
+        .game-actions {
+            padding: 14px 16px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            border-top: 1px solid var(--line);
+            background: rgba(1, 8, 4, 0.55);
+        }
+
+        .control-button {
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            border: 1px solid rgba(99, 240, 111, 0.28);
+            background: rgba(99, 240, 111, 0.08);
+            color: var(--green-bright);
+            font-weight: 900;
+            font: inherit;
+        }
+
+        .control-button.resign {
+            border-color: rgba(255, 112, 112, 0.4);
+            color: #ff9a9a;
+            background: rgba(255, 112, 112, 0.08);
+        }
+
+        .control-button.exit {
+            border-color: rgba(99, 240, 111, 0.34);
+            color: var(--green-bright);
+            background: rgba(99, 240, 111, 0.08);
+        }
+
+        .control-button.full {
+            grid-column: 1 / 3;
+        }
+
+        .csrf-form {
+            display: none;
+        }
+
+        .setup-overlay,
+        .promotion-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 20;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            background: rgba(1, 8, 4, 0.74);
+            backdrop-filter: blur(16px);
+        }
+
+        .setup-card,
+        .promotion-card {
+            width: min(520px, 100%);
+            padding: 24px;
+            border-radius: 8px;
+            background: linear-gradient(145deg, rgba(5, 24, 10, 0.98), rgba(2, 10, 6, 0.98));
+            border: 1px solid rgba(99, 240, 111, 0.34);
+            box-shadow:
+                0 32px 80px rgba(0, 0, 0, 0.5),
+                0 0 48px rgba(82, 226, 98, 0.18);
+        }
+
+        .setup-kicker {
+            margin: 0 0 8px;
+            color: var(--green-bright);
+            font-size: 0.8rem;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .setup-title {
+            margin: 0 0 10px;
+            font-size: clamp(2rem, 5vw, 3rem);
+            line-height: 1;
+            font-weight: 900;
+        }
+
+        .setup-copy {
+            margin: 0 0 20px;
+            color: var(--muted);
+            font-weight: 800;
+            line-height: 1.45;
+        }
+
+        .side-choice,
+        .promotion-choice {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .side-button,
+        .promotion-button {
+            min-height: 62px;
+            border-radius: 8px;
+            border: 1px solid rgba(99, 240, 111, 0.32);
+            background: rgba(99, 240, 111, 0.08);
+            color: #ffffff;
+            font: inherit;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        .side-button:hover,
+        .promotion-button:hover {
+            border-color: rgba(99, 240, 111, 0.72);
+            box-shadow: 0 0 28px rgba(82, 226, 98, 0.18);
+        }
+
+        .side-button.primary {
+            background: linear-gradient(135deg, #6df36f, #2fb84b);
+            color: #051006;
+        }
+
+        .promotion-card {
+            width: min(420px, 100%);
+        }
+
+        .promotion-choice {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        .promotion-button img {
+            width: 58px;
+            height: 58px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto 6px;
+            pointer-events: none;
+        }
+
+        .move-log {
+            display: grid;
+            gap: 8px;
+        }
+
+        .move-row {
+            display: grid;
+            grid-template-columns: 42px 1fr 1fr;
+            gap: 10px;
+            align-items: center;
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: rgba(99, 240, 111, 0.08);
+            border: 1px solid rgba(99, 240, 111, 0.14);
+            color: #e6efe3;
+            font-weight: 900;
+        }
+
+        .move-row span:first-child {
+            color: var(--green-bright);
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        @media (max-width: 1120px) {
+            body {
+                overflow: auto;
+            }
+
+            .game-page {
+                height: auto;
+                min-height: 100vh;
+                overflow: visible;
+            }
+
+            :root {
+                --board-size: min(72vh, 100%);
+            }
+
+            .game-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .match-top,
+            .board-area,
+            .board-frame,
+            .bottom-player {
+                width: 100%;
+            }
+
+            .eval-rail {
+                left: 10px;
+                top: 14px;
+                bottom: 14px;
+                z-index: 6;
+                opacity: 0.92;
+            }
+
+            .eval-tag {
+                left: 4px;
+                top: 20px;
+                z-index: 7;
+            }
+
+            .side-panel {
+                height: auto;
+                max-height: none;
+                min-height: auto;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .game-page {
+                padding: 18px;
+            }
+
+            .navbar,
+            .match-top {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .nav-links {
+                width: 100%;
+                gap: 18px;
+                overflow-x: auto;
+                padding-bottom: 4px;
+            }
+
+            .auth-links {
+                width: 100%;
+            }
+
+            .game-actions {
+                grid-template-columns: 1fr;
+            }
+
+            .control-button.full {
+                grid-column: auto;
+            }
+        }
+
+
+        /* Keep the site mark consistent across every page. */
+        .logo-mark,
+        .brand-mark {
+            color: rgba(231, 255, 226, 0.34) !important;
+            text-shadow: 0 0 10px rgba(240, 255, 236, 0.18);
+        }
+
+        .nav-avatar {
+            color: #061107;
+        }
+    </style>
+</head>
+<body>
+    <main class="game-page">
+                <!-- Bot game navbar keeps match pages connected to the main site. -->
+<nav class="navbar">
+            <a href="{% url 'home' %}" class="logo">
+                <span class="logo-mark">♞</span>
+                Chess <span>Tutor</span>
+            </a>
+
+            <div class="nav-links">
+                <a href="{% url 'play' %}" class="active">Play</a>
+                <a href="{% url 'tutors' %}">Tutors</a>
+                <a href="{% url 'puzzles' %}">Puzzles</a>
+                <a href="{% url 'dashboard' %}">Dashboard</a>
+            </div>
+
+            <div class="auth-links">
+                <span class="profile-link">
+                    <span class="nav-avatar">
+                        {% if account_profile.avatar %}
+                            <img src="{{ account_profile.avatar.url }}" alt="{{ request.user.username }} profile picture">
+                        {% else %}
+                            {{ request.user.username|slice:":2"|upper }}
+                        {% endif %}
+                    </span>
+                    <span class="auth-user">{{ request.user.username }}</span>
+                </span>
+                <a href="{% url 'account_settings' %}" class="auth-button">Settings</a>
+            </div>
+        </nav>
+
+        <div class="game-shell">
+            <section class="board-column" aria-label="Bot match board">
+                <div class="match-top">
+                    <div class="player-strip">
+                        <div class="bot-avatar image">
+                            <img src="{% static theme.avatar %}" alt="{{ theme.name }}">
+                        </div>
+                        <div>
+                            <h1 class="player-name">{{ theme.name }}</h1>
+                            <p class="player-meta">{{ bot.name }} - {{ bot.elo }} ELO - {{ bot.level }}</p>
+                            <div class="captured-row" id="top-captures" aria-label="Bot captures"></div>
+                        </div>
+                    </div>
+
+                    <span class="position-pill" id="position-pill">Move {{ position_number }}</span>
+                </div>
+
+                <div class="board-area">
+                    <div class="eval-rail" aria-label="Evaluation bar">
+                        <div class="eval-white" id="eval-white"></div>
+                        <span class="eval-tag" id="eval-label">Even</span>
+                    </div>
+                    <div class="board-frame">
+                        <div class="board" id="chess-board" aria-label="Chess board"></div>
+                    </div>
+                </div>
+
+                <div class="bottom-player">
+                    <div class="player-strip">
+                        <div class="avatar {% if account_profile.avatar %}image{% endif %}">
+                            {% if account_profile.avatar %}
+                                <img src="{{ account_profile.avatar.url }}" alt="{{ request.user.username }} profile picture">
+                            {% else %}
+                                {{ request.user.username|slice:":2"|upper }}
+                            {% endif %}
+                        </div>
+                        <div>
+                            <h2 class="player-name">{{ request.user.username }}</h2>
+                            <p class="player-meta" id="player-meta">{{ player_elo }} ELO - White to move - Win sets ELO to {{ bot.elo }}</p>
+                            <div class="captured-row" id="bottom-captures" aria-label="Your captures"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <aside class="side-panel" aria-label="Bot chat and controls">
+                <div class="side-header">
+                    <h2 class="side-title">Play Bots</h2>
+                </div>
+
+                <div class="chat-area">
+                    <div class="bot-speech">
+                        <div class="bot-avatar image">
+                            <img src="{% static theme.avatar %}" alt="{{ theme.name }}">
+                        </div>
+                        <div class="speech-bubble" id="primary-chat">{{ theme.intro }}</div>
+                    </div>
+                    <div class="voice-tools" aria-label="Bot voice controls">
+                        <button type="button" class="speak-button" id="speak-button">Replay Voice</button>
+                        <select class="voice-select" id="voice-select" aria-label="Bot voice">
+                            <option value="">System voice</option>
+                        </select>
+                        <label class="voice-toggle">
+                            <input type="checkbox" id="auto-speak-toggle" checked>
+                            Auto
+                        </label>
+                    </div>
+                </div>
+
+                <div class="bot-profile">
+                    <div class="bot-name-row">
+                        <h2>{{ theme.name }}</h2>
+                        <span>{{ bot.elo }} ELO</span>
+                    </div>
+
+                    <div class="position-row">
+                        <span>{{ bot.name }}</span>
+                        <strong>{{ bot.elo }} ELO target</strong>
+                    </div>
+                </div>
+
+                <div class="analysis-panel" id="analysis-panel" hidden>
+                    <h3 class="analysis-title">Post-game analysis</h3>
+                    <p class="analysis-summary" id="analysis-summary"></p>
+                    <div class="review-controls" id="review-controls">
+                        <button type="button" class="review-button" id="review-prev">Previous</button>
+                        <span class="review-label" id="review-label">Final Position</span>
+                        <button type="button" class="review-button" id="review-next">Next</button>
+                    </div>
+                    <div class="review-move-list" id="review-move-list"></div>
+                    <div class="analysis-metrics" id="analysis-metrics"></div>
+                </div>
+
+                <div class="chat-log" id="chat-log"></div>
+
+                <p class="error-message" id="move-error" aria-live="polite"></p>
+
+                <div class="game-actions">
+                    <a href="{% url 'play' %}" class="control-button resign" id="exit-button">Resign</a>
+                    <button type="button" class="control-button" id="move-log-toggle">Moves</button>
+                    <span class="control-button full" id="position-label">{{ game_state.status_text }}</span>
+                </div>
+            </aside>
+        </div>
+
+        <div class="setup-overlay" id="setup-overlay" hidden>
+            <section class="setup-card" aria-label="Choose side">
+                <p class="setup-kicker">Start Match</p>
+                <h2 class="setup-title">Choose Your Side</h2>
+                <p class="setup-copy">Pick white to move first, or black to let {{ theme.name }} make the opening move.</p>
+                <div class="side-choice">
+                    <button type="button" class="side-button primary" data-side="white">Play White</button>
+                    <button type="button" class="side-button" data-side="black">Play Black</button>
+                </div>
+            </section>
+        </div>
+
+        <div class="promotion-overlay" id="promotion-overlay" hidden>
+            <section class="promotion-card" aria-label="Choose promotion piece">
+                <p class="setup-kicker">Promotion</p>
+                <h2 class="setup-title">Choose Piece</h2>
+                <div class="promotion-choice" id="promotion-choice"></div>
+            </section>
+        </div>
+
+        <form class="csrf-form">{% csrf_token %}</form>
+        {{ game_state|json_script:"initial-game-state" }}
+    </main>
+
+    <script>
+        const files = ["a", "b", "c", "d", "e", "f", "g", "h"];
+        const whiteRanks = [8, 7, 6, 5, 4, 3, 2, 1];
+        const blackRanks = [1, 2, 3, 4, 5, 6, 7, 8];
+        const promotionPieces = ["q", "r", "b", "n"];
+        const pieceImages = {
+            wp: "{% static 'main/pieces/neo/wp.png' %}",
+            wn: "{% static 'main/pieces/neo/wn.png' %}",
+            wb: "{% static 'main/pieces/neo/wb.png' %}",
+            wr: "{% static 'main/pieces/neo/wr.png' %}",
+            wq: "{% static 'main/pieces/neo/wq.png' %}",
+            wk: "{% static 'main/pieces/neo/wk.png' %}",
+            bp: "{% static 'main/pieces/neo/bp.png' %}",
+            bn: "{% static 'main/pieces/neo/bn.png' %}",
+            bb: "{% static 'main/pieces/neo/bb.png' %}",
+            br: "{% static 'main/pieces/neo/br.png' %}",
+            bq: "{% static 'main/pieces/neo/bq.png' %}",
+            bk: "{% static 'main/pieces/neo/bk.png' %}",
+        };
+        const pieceNames = {
+            p: "Pawn",
+            n: "Knight",
+            b: "Bishop",
+            r: "Rook",
+            q: "Queen",
+            k: "King",
+        };
+
+        const startUrl = "{% url 'bot_start' bot.slug theme.slug %}";
+        const playerMoveUrl = "{% url 'bot_move' bot.slug theme.slug %}";
+        const botReplyUrl = "{% url 'bot_reply' bot.slug theme.slug %}";
+        const csrfToken = document.querySelector("[name=csrfmiddlewaretoken]").value;
+        const boardElement = document.getElementById("chess-board");
+        const chatLogElement = document.getElementById("chat-log");
+        const primaryChatElement = document.getElementById("primary-chat");
+        const positionPillElement = document.getElementById("position-pill");
+        const moveLogToggleElement = document.getElementById("move-log-toggle");
+        const positionLabelElement = document.getElementById("position-label");
+        const exitButtonElement = document.getElementById("exit-button");
+        const playerMetaElement = document.getElementById("player-meta");
+        const topCapturesElement = document.getElementById("top-captures");
+        const bottomCapturesElement = document.getElementById("bottom-captures");
+        const evaluationFillElement = document.getElementById("eval-white");
+        const evaluationLabelElement = document.getElementById("eval-label");
+        const analysisPanelElement = document.getElementById("analysis-panel");
+        const analysisSummaryElement = document.getElementById("analysis-summary");
+        const analysisMetricsElement = document.getElementById("analysis-metrics");
+        const reviewControlsElement = document.getElementById("review-controls");
+        const reviewLabelElement = document.getElementById("review-label");
+        const reviewPrevElement = document.getElementById("review-prev");
+        const reviewNextElement = document.getElementById("review-next");
+        const reviewMoveListElement = document.getElementById("review-move-list");
+        const errorElement = document.getElementById("move-error");
+        const setupOverlayElement = document.getElementById("setup-overlay");
+        const promotionOverlayElement = document.getElementById("promotion-overlay");
+        const promotionChoiceElement = document.getElementById("promotion-choice");
+        const speakButtonElement = document.getElementById("speak-button");
+        const voiceSelectElement = document.getElementById("voice-select");
+        const autoSpeakToggleElement = document.getElementById("auto-speak-toggle");
+        const botVoiceGender = "{{ theme.slug }}" === "serena-williams" ? "female" : "male";
+        const voiceStorageKey = `chessBotVoiceName:${botVoiceGender}`;
+
+        let state = JSON.parse(document.getElementById("initial-game-state").textContent);
+        let selectedSquare = null;
+        let busy = false;
+        let showMoveLog = false;
+        let showAnalysis = false;
+        let reviewIndex = null;
+        let pendingPromotionMoves = [];
+        let audioContext = null;
+        let availableVoices = [];
+        let initialAutoSpeechDone = false;
+
+        function sleep(ms) {
+            return new Promise((resolve) => setTimeout(resolve, ms));
+        }
+
+        function boardFiles() {
+            return state.player_color === "black" ? [...files].reverse() : files;
+        }
+
+        function boardRanks() {
+            return state.player_color === "black" ? blackRanks : whiteRanks;
+        }
+
+        function playerPiecePrefix() {
+            return state.player_color === "black" ? "b" : "w";
+        }
+
+        function getPiecesBySquare() {
+            const boardState = currentBoardState();
+            return new Map((boardState.pieces || []).map((piece) => [piece.square, piece.piece]));
+        }
+
+        function isGameFinished() {
+            return state.status !== "active" && !state.awaiting_setup;
+        }
+
+        function reviewPositions() {
+            return state.position_history || [];
+        }
+
+        function currentReviewPosition() {
+            const positions = reviewPositions();
+
+            if (!showAnalysis || !isGameFinished() || !positions.length) {
+                return null;
+            }
+
+            if (reviewIndex === null || reviewIndex < 0 || reviewIndex >= positions.length) {
+                reviewIndex = positions.length - 1;
+            }
+
+            return positions[reviewIndex];
+        }
+
+        function currentBoardState() {
+            return currentReviewPosition() || state;
+        }
+
+        function setReviewIndex(nextIndex) {
+            const positions = reviewPositions();
+
+            if (!positions.length) {
+                return;
+            }
+
+            reviewIndex = Math.max(0, Math.min(positions.length - 1, nextIndex));
+            selectedSquare = null;
+            clearDragHighlights();
+            renderBoard();
+            renderStatus();
+        }
+
+        function getTargetsFor(square) {
+            if (currentReviewPosition()) {
+                return new Set();
+            }
+
+            return new Set(
+                state.legal_moves
+                    .filter((move) => move.slice(0, 2) === square)
+                    .map((move) => move.slice(2, 4))
+            );
+        }
+
+        function hasLegalMoveFrom(square) {
+            return state.legal_moves.some((move) => move.slice(0, 2) === square);
+        }
+
+        function canMovePiece(square, pieceCode) {
+            return (
+                !currentReviewPosition()
+                &&
+                state.player_turn
+                && pieceCode
+                && pieceCode.startsWith(playerPiecePrefix())
+                && hasLegalMoveFrom(square)
+            );
+        }
+
+        function legalMovesBetween(fromSquare, toSquare) {
+            if (currentReviewPosition()) {
+                return [];
+            }
+
+            return state.legal_moves.filter((move) => (
+                move.slice(0, 2) === fromSquare && move.slice(2, 4) === toSquare
+            ));
+        }
+
+        function sideCaptures(color) {
+            return (state.captures && state.captures[color]) || { pieces: [], advantage: 0 };
+        }
+
+        function renderCaptureRow(element, color) {
+            const captureData = sideCaptures(color);
+            element.innerHTML = "";
+            element.hidden = !captureData.pieces.length && !captureData.advantage;
+
+            captureData.pieces.forEach((pieceCode) => {
+                const image = document.createElement("img");
+                image.src = pieceImages[pieceCode];
+                image.alt = `${pieceCode.startsWith("w") ? "White" : "Black"} ${pieceNames[pieceCode[1]]}`;
+                element.appendChild(image);
+            });
+
+            if (captureData.advantage) {
+                const score = document.createElement("span");
+                score.className = "capture-score";
+                score.textContent = `+${captureData.advantage}`;
+                element.appendChild(score);
+            }
+        }
+
+        function renderCaptures() {
+            const playerColor = state.player_color || "white";
+            const botColor = playerColor === "white" ? "black" : "white";
+
+            renderCaptureRow(topCapturesElement, botColor);
+            renderCaptureRow(bottomCapturesElement, playerColor);
+        }
+
+        function renderEvaluation() {
+            const evaluation = state.evaluation || {};
+            const whitePercent = Number(evaluation.white_percent);
+            const safePercent = Number.isFinite(whitePercent)
+                ? Math.max(5, Math.min(95, whitePercent))
+                : 50;
+
+            evaluationFillElement.style.height = `${safePercent}%`;
+            evaluationLabelElement.textContent = evaluation.label || "Even";
+        }
+
+        function renderAnalysis() {
+            const analysis = state.analysis || {};
+            const metrics = analysis.metrics || [];
+            analysisPanelElement.hidden = !analysis.available || !showAnalysis;
+            analysisSummaryElement.textContent = analysis.summary || "";
+            reviewMoveListElement.innerHTML = "";
+            analysisMetricsElement.innerHTML = "";
+
+            if (!analysis.available || !showAnalysis) {
+                return;
+            }
+
+            renderReviewControls();
+
+            metrics.forEach((metric) => {
+                const row = document.createElement("div");
+                const label = document.createElement("span");
+                const track = document.createElement("div");
+                const fill = document.createElement("div");
+                const score = document.createElement("strong");
+                const metricScore = Math.max(0, Math.min(100, Number(metric.score) || 0));
+
+                row.className = "analysis-row";
+                label.textContent = metric.name;
+                track.className = "metric-track";
+                fill.className = "metric-fill";
+                fill.style.width = `${metricScore}%`;
+                score.textContent = metricScore;
+
+                track.appendChild(fill);
+                row.append(label, track, score);
+                analysisMetricsElement.appendChild(row);
+            });
+        }
+
+        function renderReviewControls() {
+            const positions = reviewPositions();
+            const selectedPosition = currentReviewPosition();
+
+            reviewControlsElement.hidden = positions.length <= 1;
+            reviewMoveListElement.hidden = positions.length <= 1;
+
+            if (!selectedPosition) {
+                reviewLabelElement.textContent = "Final Position";
+                reviewPrevElement.disabled = true;
+                reviewNextElement.disabled = true;
+                return;
+            }
+
+            reviewLabelElement.textContent = selectedPosition.label;
+            reviewPrevElement.disabled = reviewIndex <= 0;
+            reviewNextElement.disabled = reviewIndex >= positions.length - 1;
+
+            positions.slice(1).forEach((position) => {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = position.index === reviewIndex ? "review-move active" : "review-move";
+                button.textContent = position.label;
+                button.addEventListener("click", () => setReviewIndex(position.index));
+                reviewMoveListElement.appendChild(button);
+            });
+        }
+
+        function clearDragHighlights() {
+            boardElement.querySelectorAll(".selected, .legal-target").forEach((square) => {
+                square.classList.remove("selected", "legal-target");
+            });
+        }
+
+        function showDragTargets(square) {
+            clearDragHighlights();
+
+            const selectedElement = boardElement.querySelector(`[data-square="${square}"]`);
+            selectedElement?.classList.add("selected");
+
+            getTargetsFor(square).forEach((targetSquare) => {
+                boardElement.querySelector(`[data-square="${targetSquare}"]`)?.classList.add("legal-target");
+            });
+        }
+
+        function getAudioContext() {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+
+            if (!AudioContext) {
+                return null;
+            }
+
+            if (!audioContext) {
+                audioContext = new AudioContext();
+            }
+
+            if (audioContext.state === "suspended") {
+                audioContext.resume();
+            }
+
+            return audioContext;
+        }
+
+        function playTone(context, frequency, start, duration, gainValue = 0.08, type = "triangle") {
+            const oscillator = context.createOscillator();
+            const gain = context.createGain();
+            oscillator.type = type;
+            oscillator.frequency.setValueAtTime(frequency, start);
+            gain.gain.setValueAtTime(0.0001, start);
+            gain.gain.exponentialRampToValueAtTime(gainValue, start + 0.012);
+            gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+            oscillator.connect(gain);
+            gain.connect(context.destination);
+            oscillator.start(start);
+            oscillator.stop(start + duration + 0.02);
+        }
+
+        function playMoveSound(kind = "move") {
+            const context = getAudioContext();
+
+            if (!context) {
+                return;
+            }
+
+            const now = context.currentTime;
+
+            if (kind === "win") {
+                playTone(context, 392, now, 0.11, 0.09);
+                playTone(context, 523, now + 0.09, 0.12, 0.1);
+                playTone(context, 784, now + 0.19, 0.18, 0.11);
+                return;
+            }
+
+            if (kind === "loss") {
+                playTone(context, 196, now, 0.14, 0.1, "sawtooth");
+                playTone(context, 147, now + 0.12, 0.2, 0.08, "sawtooth");
+                return;
+            }
+
+            if (kind === "draw") {
+                playTone(context, 294, now, 0.1, 0.06);
+                playTone(context, 294, now + 0.12, 0.1, 0.06);
+                return;
+            }
+
+            if (kind === "check") {
+                playTone(context, 659, now, 0.08, 0.09, "square");
+                playTone(context, 494, now + 0.08, 0.1, 0.07, "square");
+                return;
+            }
+
+            if (kind === "capture") {
+                playTone(context, 210, now, 0.11, 0.12, "triangle");
+                playTone(context, 150, now + 0.04, 0.1, 0.08, "sine");
+                return;
+            }
+
+            playTone(context, 360, now, 0.1, 0.08);
+        }
+
+        function moveSoundKind(previousState, nextState) {
+            const previousLength = previousState?.move_history?.length || 0;
+            const nextLength = nextState?.move_history?.length || 0;
+
+            if (nextLength <= previousLength) {
+                return null;
+            }
+
+            if (nextState.winner === "player") {
+                return "win";
+            }
+
+            if (nextState.winner === "bot") {
+                return "loss";
+            }
+
+            if (nextState.winner === "draw") {
+                return "draw";
+            }
+
+            if (nextState.status_text?.startsWith("Check.")) {
+                return "check";
+            }
+
+            const latestMove = nextState.move_history[nextLength - 1];
+            return latestMove?.san?.includes("x") ? "capture" : "move";
+        }
+
+        function playLatestMoveSound(previousState, nextState) {
+            const kind = moveSoundKind(previousState, nextState);
+
+            if (kind) {
+                playMoveSound(kind);
+            }
+        }
+
+        function latestBotSpeechText() {
+            const latestDialogue = (state.dialogue || []).slice(-1)[0];
+            return latestDialogue?.text || primaryChatElement.textContent || "";
+        }
+
+        function populateVoiceOptions() {
+            if (!voiceSelectElement || !("speechSynthesis" in window)) {
+                return;
+            }
+
+            availableVoices = window.speechSynthesis.getVoices();
+            const savedVoice = localStorage.getItem(voiceStorageKey) || "";
+            const preferredVoice = preferredBotVoice();
+            const selectedVoiceName = savedVoice || preferredVoice?.name || "";
+            voiceSelectElement.innerHTML = '<option value="">System voice</option>';
+
+            availableVoices.forEach((voice) => {
+                const option = document.createElement("option");
+                option.value = voice.name;
+                option.textContent = `${voice.name} (${voice.lang})`;
+                option.selected = voice.name === selectedVoiceName;
+                voiceSelectElement.appendChild(option);
+            });
+
+            if (!savedVoice && preferredVoice) {
+                voiceSelectElement.value = preferredVoice.name;
+            }
+        }
+
+        function preferredBotVoice() {
+            if (!availableVoices.length) {
+                return null;
+            }
+
+            const exactName = botVoiceGender === "female"
+                ? "Google UK English Female"
+                : "Google UK English Male";
+            const exact = availableVoices.find((voice) => voice.name === exactName);
+
+            if (exact) {
+                return exact;
+            }
+
+            const genderMatch = availableVoices.find((voice) => {
+                const name = voice.name.toLowerCase();
+                return voice.lang === "en-GB" && name.includes(botVoiceGender);
+            });
+
+            if (genderMatch) {
+                return genderMatch;
+            }
+
+            const googleUk = availableVoices.find((voice) => {
+                const name = voice.name.toLowerCase();
+                return voice.lang === "en-GB" && name.includes("google");
+            });
+
+            if (googleUk) {
+                return googleUk;
+            }
+
+            return availableVoices.find((voice) => voice.lang === "en-GB") || null;
+        }
+
+        function selectedVoice() {
+            if (!voiceSelectElement?.value) {
+                return null;
+            }
+
+            return availableVoices.find((voice) => voice.name === voiceSelectElement.value) || null;
+        }
+
+        function speakText(text) {
+            if (!text || !("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) {
+                return null;
+            }
+
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            const voice = selectedVoice();
+
+            if (voice) {
+                utterance.voice = voice;
+            }
+
+            utterance.rate = 0.94;
+            utterance.pitch = botVoiceGender === "female" ? 1.03 : 0.96;
+            utterance.volume = 0.9;
+            window.speechSynthesis.speak(utterance);
+            return utterance;
+        }
+
+        function speakBotMessage(text = latestBotSpeechText()) {
+            return speakText(text);
+        }
+
+        function tryInitialAutoSpeak() {
+            if (initialAutoSpeechDone || !autoSpeakToggleElement.checked) {
+                return;
+            }
+
+            const utterance = speakBotMessage();
+
+            if (utterance) {
+                utterance.onstart = () => {
+                    initialAutoSpeechDone = true;
+                };
+                utterance.onend = () => {
+                    initialAutoSpeechDone = true;
+                };
+            }
+        }
+
+        function renderBoard() {
+            const boardState = currentBoardState();
+            const piecesBySquare = getPiecesBySquare();
+            const targets = selectedSquare ? getTargetsFor(selectedSquare) : new Set();
+            const lastMove = boardState.last_move || null;
+            const lastMoveSquares = lastMove
+                ? [lastMove.slice(0, 2), lastMove.slice(2, 4)]
+                : [];
+            const displayFiles = boardFiles();
+            const displayRanks = boardRanks();
+
+            boardElement.innerHTML = "";
+
+            displayRanks.forEach((rank, rankIndex) => {
+                displayFiles.forEach((file, fileIndex) => {
+                    const squareName = `${file}${rank}`;
+                    const pieceCode = piecesBySquare.get(squareName);
+                    const squareElement = document.createElement("button");
+                    const colour = (rankIndex + fileIndex) % 2 === 0 ? "light" : "dark";
+                    const canDrag = canMovePiece(squareName, pieceCode);
+
+                    squareElement.type = "button";
+                    squareElement.className = `square ${colour}`;
+                    squareElement.dataset.square = squareName;
+                    squareElement.draggable = false;
+                    squareElement.setAttribute("aria-label", squareName);
+
+                    if (selectedSquare === squareName) {
+                        squareElement.classList.add("selected");
+                    }
+
+                    if (targets.has(squareName)) {
+                        squareElement.classList.add("legal-target");
+                    }
+
+                    if (pieceCode) {
+                        squareElement.classList.add("has-piece");
+                    }
+
+                    if (lastMoveSquares.includes(squareName)) {
+                        squareElement.classList.add("last-move");
+                    }
+
+                    if (fileIndex === 0) {
+                        const rankLabel = document.createElement("span");
+                        rankLabel.className = "coord rank-label";
+                        rankLabel.textContent = rank;
+                        squareElement.appendChild(rankLabel);
+                    }
+
+                    if (rankIndex === displayRanks.length - 1) {
+                        const fileLabel = document.createElement("span");
+                        fileLabel.className = "coord file-label";
+                        fileLabel.textContent = file;
+                        squareElement.appendChild(fileLabel);
+                    }
+
+                    if (pieceCode) {
+                        const image = document.createElement("img");
+                        image.className = canDrag ? "piece draggable-piece" : "piece";
+                        image.src = pieceImages[pieceCode];
+                        image.alt = `${pieceCode.startsWith("w") ? "White" : "Black"} ${pieceNames[pieceCode[1]]}`;
+                        image.draggable = canDrag;
+                        image.dataset.square = squareName;
+                        image.addEventListener("dragstart", handleDragStart);
+                        image.addEventListener("dragend", handleDragEnd);
+                        squareElement.appendChild(image);
+                    }
+
+                    squareElement.addEventListener("click", handleSquareClick);
+                    squareElement.addEventListener("dragover", handleDragOver);
+                    squareElement.addEventListener("drop", handleDrop);
+                    boardElement.appendChild(squareElement);
+                });
+            });
+        }
+
+        function renderDialogue() {
+            const messages = state.dialogue || [];
+            const latestMessage = messages[messages.length - 1];
+            primaryChatElement.textContent = latestMessage ? latestMessage.text : "Make your move.";
+            chatLogElement.innerHTML = "";
+            chatLogElement.hidden = showAnalysis && isGameFinished() && state.analysis?.available;
+
+            if (chatLogElement.hidden) {
+                return;
+            }
+
+            if (showMoveLog) {
+                renderMoveLog();
+                return;
+            }
+
+            messages.slice(0, -1).forEach((message) => {
+                const line = document.createElement("div");
+                const speaker = document.createElement("span");
+
+                line.className = "chat-line";
+                speaker.textContent = message.speaker;
+                line.appendChild(speaker);
+                line.append(document.createTextNode(message.text));
+                chatLogElement.appendChild(line);
+            });
+
+            if (messages.length <= 1) {
+                const empty = document.createElement("div");
+                empty.className = "empty-chat";
+                empty.textContent = "Chat updates appear here after each move.";
+                chatLogElement.appendChild(empty);
+            }
+        }
+
+        function renderMoveLog() {
+            const rows = state.notation_log || [];
+            const log = document.createElement("div");
+            log.className = "move-log";
+
+            if (!rows.length) {
+                const empty = document.createElement("div");
+                empty.className = "empty-chat";
+                empty.textContent = "Moves will appear here in notation after the game starts.";
+                chatLogElement.appendChild(empty);
+                return;
+            }
+
+            rows.forEach((moveRow) => {
+                const row = document.createElement("div");
+                row.className = "move-row";
+                row.innerHTML = `<span>${moveRow.number}.</span><strong>${moveRow.white || ""}</strong><strong>${moveRow.black || ""}</strong>`;
+                log.appendChild(row);
+            });
+
+            chatLogElement.appendChild(log);
+        }
+
+        function renderStatus() {
+            const finished = isGameFinished();
+            const reviewPosition = currentReviewPosition();
+            const rewardText = state.winner === "player"
+                ? `Reached ${state.reward_elo} ELO`
+                : `Win sets ELO to ${state.reward_elo}`;
+            const sideText = state.player_color === "black" ? "Black" : "White";
+
+            positionPillElement.textContent = reviewPosition ? reviewPosition.label : `Move ${state.move_number}`;
+            moveLogToggleElement.textContent = finished
+                ? (showAnalysis ? "Chat" : "Analysis")
+                : (showMoveLog ? "Chat" : "Moves");
+            positionLabelElement.textContent = state.status_text;
+            positionLabelElement.hidden = finished;
+            exitButtonElement.textContent = finished ? "Exit" : "Resign";
+            exitButtonElement.classList.toggle("exit", finished);
+            exitButtonElement.classList.toggle("resign", !finished);
+            playerMetaElement.textContent = `${state.player_elo} ELO - ${sideText} pieces - ${state.engine_source} - ${rewardText}`;
+            setupOverlayElement.hidden = !state.awaiting_setup;
+            renderCaptures();
+            renderEvaluation();
+            renderAnalysis();
+        }
+
+        function updateState(nextState, shouldPlaySound = false) {
+            const previousState = state;
+            state = nextState;
+            selectedSquare = null;
+            if (!isGameFinished()) {
+                showAnalysis = false;
+                reviewIndex = null;
+            } else {
+                showMoveLog = false;
+                reviewIndex = reviewIndex ?? (reviewPositions().length - 1);
+            }
+            clearDragHighlights();
+            if (shouldPlaySound) {
+                playLatestMoveSound(previousState, nextState);
+            }
+            renderBoard();
+            renderDialogue();
+            renderStatus();
+        }
+
+        function optimisticMoveKind(move) {
+            const piecesBySquare = getPiecesBySquare();
+            const fromSquare = move.slice(0, 2);
+            const toSquare = move.slice(2, 4);
+            const movingPiece = piecesBySquare.get(fromSquare);
+            const targetPiece = piecesBySquare.get(toSquare);
+
+            if (targetPiece) {
+                return "capture";
+            }
+
+            if (movingPiece?.[1] === "p" && fromSquare[0] !== toSquare[0]) {
+                return "capture";
+            }
+
+            return "move";
+        }
+
+        function applyOptimisticMove(move) {
+            const fromSquare = move.slice(0, 2);
+            const toSquare = move.slice(2, 4);
+            const promotionPiece = move[4];
+            const piecesBySquare = getPiecesBySquare();
+            const movingPiece = piecesBySquare.get(fromSquare);
+
+            if (!movingPiece) {
+                return;
+            }
+
+            const enPassantCaptureSquare = (
+                movingPiece[1] === "p"
+                && fromSquare[0] !== toSquare[0]
+                && !piecesBySquare.get(toSquare)
+            )
+                ? `${toSquare[0]}${fromSquare[1]}`
+                : null;
+            const nextPiece = promotionPiece ? `${movingPiece[0]}${promotionPiece}` : movingPiece;
+            const nextPieces = state.pieces
+                .filter((piece) => (
+                    piece.square !== fromSquare
+                    && piece.square !== toSquare
+                    && piece.square !== enPassantCaptureSquare
+                ))
+                .concat([{ square: toSquare, piece: nextPiece }]);
+
+            state = {
+                ...state,
+                pieces: nextPieces,
+                legal_moves: [],
+                player_turn: false,
+                awaiting_bot_move: true,
+                last_move: move,
+                status_text: "Bot thinking",
+            };
+            selectedSquare = null;
+            clearDragHighlights();
+            renderBoard();
+            renderStatus();
+        }
+
+        function handleSquareClick(event) {
+            if (busy || !state.player_turn) {
+                return;
+            }
+
+            const square = event.currentTarget.dataset.square;
+            const pieceCode = getPiecesBySquare().get(square);
+
+            if (selectedSquare) {
+                const moveStarted = attemptMove(selectedSquare, square);
+
+                if (moveStarted) {
+                    return;
+                }
+            }
+
+            if (canMovePiece(square, pieceCode)) {
+                selectedSquare = square;
+                errorElement.textContent = "";
+            } else {
+                selectedSquare = null;
+            }
+
+            renderBoard();
+        }
+
+        function handleDragStart(event) {
+            const square = event.currentTarget.dataset.square;
+            const pieceCode = getPiecesBySquare().get(square);
+
+            if (busy || !canMovePiece(square, pieceCode)) {
+                event.preventDefault();
+                return;
+            }
+
+            selectedSquare = square;
+            event.currentTarget.classList.add("dragging-piece");
+            event.dataTransfer.effectAllowed = "move";
+            event.dataTransfer.setData("text/plain", square);
+            event.dataTransfer.setDragImage(event.currentTarget, event.currentTarget.width / 2, event.currentTarget.height / 2);
+            showDragTargets(square);
+        }
+
+        function handleDragEnd(event) {
+            event.currentTarget.classList.remove("dragging-piece");
+
+            if (!busy) {
+                selectedSquare = null;
+                renderBoard();
+            }
+        }
+
+        function handleDragOver(event) {
+            if (!selectedSquare) {
+                return;
+            }
+
+            const targetSquare = event.currentTarget.dataset.square;
+
+            if (legalMovesBetween(selectedSquare, targetSquare).length) {
+                event.preventDefault();
+            }
+        }
+
+        function handleDrop(event) {
+            event.preventDefault();
+
+            if (busy) {
+                return;
+            }
+
+            const fromSquare = event.dataTransfer.getData("text/plain") || selectedSquare;
+            const toSquare = event.currentTarget.dataset.square;
+            attemptMove(fromSquare, toSquare);
+        }
+
+        function attemptMove(fromSquare, toSquare) {
+            const moves = legalMovesBetween(fromSquare, toSquare);
+
+            if (!moves.length) {
+                selectedSquare = null;
+                renderBoard();
+                return false;
+            }
+
+            if (moves.length > 1 || moves[0].length === 5) {
+                showPromotionChoice(moves);
+                return true;
+            }
+
+            submitMove(moves[0]);
+            return true;
+        }
+
+        function showPromotionChoice(moves) {
+            pendingPromotionMoves = moves;
+            promotionChoiceElement.innerHTML = "";
+
+            promotionPieces.forEach((piece) => {
+                const move = pendingPromotionMoves.find((candidate) => candidate.endsWith(piece));
+
+                if (!move) {
+                    return;
+                }
+
+                const button = document.createElement("button");
+                const pieceCode = `${playerPiecePrefix()}${piece}`;
+                button.type = "button";
+                button.className = "promotion-button";
+                button.innerHTML = `<img src="${pieceImages[pieceCode]}" alt="${pieceNames[piece]}"><span>${pieceNames[piece]}</span>`;
+                button.addEventListener("click", () => {
+                    promotionOverlayElement.hidden = true;
+                    submitMove(move);
+                });
+                promotionChoiceElement.appendChild(button);
+            });
+
+            promotionOverlayElement.hidden = false;
+        }
+
+        async function postJson(url, body = {}, shouldPlaySound = false) {
+            const response = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken,
+                },
+                body: JSON.stringify(body),
+            });
+            const payload = await response.json();
+
+            if (payload.state) {
+                updateState(payload.state, shouldPlaySound);
+            }
+
+            if (!response.ok || !payload.ok) {
+                const requestError = new Error(payload.error || "That move could not be played.");
+                requestError.hasState = Boolean(payload.state);
+                throw requestError;
+            }
+
+            return payload;
+        }
+
+        async function startMatch(color) {
+            busy = true;
+            errorElement.textContent = "";
+            positionLabelElement.textContent = "Starting match...";
+
+            try {
+                await postJson(startUrl, { color });
+            } catch (error) {
+                errorElement.textContent = error.message;
+            } finally {
+                busy = false;
+                renderBoard();
+            }
+        }
+
+        async function submitMove(move) {
+            const stateBeforeMove = state;
+            const soundKind = optimisticMoveKind(move);
+            busy = true;
+            selectedSquare = null;
+            errorElement.textContent = "";
+            promotionOverlayElement.hidden = true;
+            playMoveSound(soundKind);
+            applyOptimisticMove(move);
+
+            try {
+                await postJson(playerMoveUrl, { move });
+                let speechText = latestBotSpeechText();
+
+                if (state.winner === "player") {
+                    playMoveSound("win");
+                } else if (state.winner === "draw") {
+                    playMoveSound("draw");
+                } else if (state.status_text?.startsWith("Check.")) {
+                    playMoveSound("check");
+                }
+
+                if (state.awaiting_bot_move) {
+                    positionLabelElement.textContent = "Bot thinking...";
+                    await sleep(300);
+                    await postJson(botReplyUrl, {}, true);
+                    const afterBotReplyText = latestBotSpeechText();
+                    speechText = afterBotReplyText || speechText;
+                }
+
+                if (autoSpeakToggleElement.checked) {
+                    speakBotMessage(speechText);
+                }
+            } catch (error) {
+                if (!error.hasState) {
+                    updateState(stateBeforeMove);
+                }
+                errorElement.textContent = error.message || "The move could not reach the server.";
+            } finally {
+                busy = false;
+                renderBoard();
+                renderStatus();
+            }
+        }
+
+        document.querySelectorAll("[data-side]").forEach((button) => {
+            button.addEventListener("click", () => startMatch(button.dataset.side));
+        });
+
+        moveLogToggleElement.addEventListener("click", () => {
+            if (isGameFinished() && state.analysis?.available) {
+                showAnalysis = !showAnalysis;
+                showMoveLog = false;
+                reviewIndex = showAnalysis ? reviewPositions().length - 1 : null;
+                renderDialogue();
+                renderBoard();
+                renderStatus();
+                return;
+            }
+
+            showMoveLog = !showMoveLog;
+            renderDialogue();
+            renderStatus();
+        });
+
+        reviewPrevElement.addEventListener("click", () => {
+            setReviewIndex((reviewIndex ?? reviewPositions().length - 1) - 1);
+        });
+
+        reviewNextElement.addEventListener("click", () => {
+            setReviewIndex((reviewIndex ?? 0) + 1);
+        });
+
+        promotionOverlayElement.addEventListener("click", (event) => {
+            if (event.target === promotionOverlayElement) {
+                promotionOverlayElement.hidden = true;
+                pendingPromotionMoves = [];
+            }
+        });
+
+        speakButtonElement.addEventListener("click", () => {
+            speakBotMessage();
+        });
+
+        voiceSelectElement.addEventListener("change", () => {
+            localStorage.setItem(voiceStorageKey, voiceSelectElement.value);
+            speakBotMessage();
+        });
+
+        autoSpeakToggleElement.addEventListener("change", () => {
+            localStorage.setItem("chessBotAutoSpeak", autoSpeakToggleElement.checked ? "true" : "false");
+        });
+
+        if (localStorage.getItem("chessBotAutoSpeak") === "false") {
+            autoSpeakToggleElement.checked = false;
+        }
+
+        if ("speechSynthesis" in window) {
+            populateVoiceOptions();
+            window.speechSynthesis.onvoiceschanged = () => {
+                populateVoiceOptions();
+                window.setTimeout(tryInitialAutoSpeak, 250);
+            };
+        }
+
+        updateState(state);
+        window.setTimeout(tryInitialAutoSpeak, 650);
+        ["click", "keydown", "touchstart"].forEach((eventName) => {
+            window.addEventListener(eventName, tryInitialAutoSpeak, { once: true });
+        });
+    </script>
+</body>
+</html>

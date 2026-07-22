@@ -1,0 +1,1688 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ puzzle.name }} Puzzle | Chess Tutor</title>
+    <style>
+        :root {
+            --bg: #020804;
+            --panel: rgba(2, 18, 8, 0.9);
+            --panel-strong: rgba(3, 28, 11, 0.94);
+            --line: rgba(80, 255, 108, 0.28);
+            --green: #50f06a;
+            --green-soft: #9dff9e;
+            --red: #ff7a7a;
+            --text: #f2f8ef;
+            --muted: #b8c7b3;
+            --light-square: #eeeed2;
+            --dark-square: #779954;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 56% 18%, rgba(53, 255, 91, 0.18), transparent 33%),
+                radial-gradient(circle at 10% 92%, rgba(53, 255, 91, 0.08), transparent 28%),
+                var(--bg);
+            color: var(--text);
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        body::-webkit-scrollbar-track {
+            background: #020804;
+        }
+
+        body::-webkit-scrollbar-thumb {
+            background: rgba(80, 240, 106, 0.8);
+            border-radius: 999px;
+            border: 3px solid #020804;
+        }
+
+        a,
+        button {
+            color: inherit;
+            font: inherit;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        .page {
+            width: min(100%, 1540px);
+            min-height: 100vh;
+            margin: 0 auto;
+            padding: 18px 42px 20px;
+        }
+
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 28px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 26px;
+            font-weight: 900;
+        }
+
+        .logo span:last-child {
+            color: var(--green);
+            text-shadow: 0 0 18px rgba(80, 240, 106, 0.45);
+        }
+
+        .logo-mark {
+            display: grid;
+            place-items: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            background: linear-gradient(145deg, #68ff72, #23b64b);
+            color: rgba(231, 255, 226, 0.34);
+            box-shadow: 0 0 28px rgba(80, 240, 106, 0.42);
+            font-size: 25px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 36px;
+            font-size: 16px;
+            font-weight: 800;
+            color: rgba(242, 248, 239, 0.75);
+        }
+
+        .nav-links a {
+            position: relative;
+            padding: 8px 0;
+        }
+
+        .nav-links a.active,
+        .nav-links a:hover {
+            color: var(--green);
+        }
+
+        .nav-links a.active::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -14px;
+            height: 3px;
+            background: var(--green);
+            box-shadow: 0 0 18px rgba(80, 240, 106, 0.75);
+        }
+
+        .auth-links {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-weight: 900;
+        }
+
+        .profile-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .profile-copy {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 8px;
+            line-height: 1;
+        }
+
+        .nav-rating {
+            color: var(--green);
+            font-size: 12px;
+            font-weight: 950;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-avatar {
+            display: grid;
+            place-items: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            background: linear-gradient(145deg, #58f071, #23b94d);
+            color: rgba(231, 255, 226, 0.34);
+            overflow: hidden;
+        }
+
+        .nav-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .auth-button {
+            padding: 10px 18px;
+            border: 1px solid rgba(80, 240, 106, 0.55);
+            border-radius: 6px;
+            color: var(--green);
+        }
+
+        .puzzle-shell {
+            display: grid;
+            grid-template-columns: minmax(560px, 690px) minmax(360px, 430px);
+            gap: 22px;
+            align-items: start;
+            justify-content: center;
+            padding-top: 10px;
+        }
+
+        .board-column,
+        .coach-panel {
+            min-width: 0;
+        }
+
+        .board-column {
+            --board-size: min(680px, 50vw, calc(100vh - 218px));
+        }
+
+        .puzzle-top {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 22px;
+            margin: 0 auto 8px;
+            width: var(--board-size);
+            min-height: 54px;
+        }
+
+        .puzzle-title-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .category-number {
+            display: grid;
+            place-items: center;
+            width: 54px;
+            height: 54px;
+            border-radius: 10px;
+            background: linear-gradient(145deg, #68ff72, #23b64b);
+            color: rgba(231, 255, 226, 0.34);
+            font-size: 20px;
+            font-weight: 950;
+            box-shadow: 0 0 30px rgba(80, 240, 106, 0.28);
+        }
+
+        .puzzle-name {
+            margin: 0;
+            font-size: 28px;
+            line-height: 1;
+        }
+
+        .puzzle-meta {
+            margin: 4px 0 0;
+            color: var(--muted);
+            font-size: 17px;
+            font-weight: 800;
+        }
+
+        .move-pill {
+            width: 178px;
+            padding: 12px 16px;
+            border: 1px solid rgba(80, 240, 106, 0.5);
+            border-radius: 999px;
+            color: var(--green);
+            text-align: center;
+            font-weight: 950;
+            background: rgba(18, 70, 28, 0.38);
+            white-space: nowrap;
+        }
+
+        .board-frame {
+            width: var(--board-size);
+            margin: 0 auto;
+            padding: 6px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: rgba(0, 12, 4, 0.82);
+            box-shadow: 0 0 54px rgba(80, 240, 106, 0.12);
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            aspect-ratio: 1;
+            overflow: hidden;
+            border-radius: 6px;
+        }
+
+        .square {
+            position: relative;
+            display: grid;
+            place-items: center;
+            min-width: 0;
+        }
+
+        .square.light {
+            background: var(--light-square);
+        }
+
+        .square.dark {
+            background: var(--dark-square);
+        }
+
+        .square.selected {
+            box-shadow: inset 0 0 0 5px rgba(80, 240, 106, 0.85);
+        }
+
+        .square.correct {
+            box-shadow: inset 0 0 0 5px rgba(80, 240, 106, 0.95), inset 0 0 26px rgba(80, 240, 106, 0.55);
+        }
+
+        .square.hint-piece {
+            box-shadow: inset 0 0 0 6px rgba(255, 231, 91, 0.88), inset 0 0 28px rgba(255, 231, 91, 0.5);
+        }
+
+        .square.wrong {
+            box-shadow: inset 0 0 0 5px rgba(255, 122, 122, 0.88), inset 0 0 26px rgba(255, 122, 122, 0.28);
+        }
+
+        .coord {
+            position: absolute;
+            z-index: 2;
+            color: rgba(67, 126, 58, 0.95);
+            font-size: 18px;
+            font-weight: 900;
+            line-height: 1;
+            pointer-events: none;
+        }
+
+        .rank-label {
+            top: 8px;
+            left: 8px;
+        }
+
+        .file-label {
+            right: 8px;
+            bottom: 7px;
+        }
+
+        .piece {
+            position: relative;
+            z-index: 3;
+            width: 86%;
+            height: 86%;
+            object-fit: contain;
+            filter: drop-shadow(0 6px 4px rgba(0, 0, 0, 0.45));
+            user-select: none;
+            -webkit-user-drag: element;
+            cursor: grab;
+        }
+
+        .piece.dragging {
+            opacity: 0.42;
+            cursor: grabbing;
+        }
+
+        .legal-dot {
+            position: absolute;
+            z-index: 1;
+            width: 24%;
+            height: 24%;
+            border-radius: 999px;
+            background: rgba(18, 57, 15, 0.42);
+            pointer-events: none;
+        }
+
+        .square.has-piece.legal-target .legal-dot {
+            width: 74%;
+            height: 74%;
+            border: 7px solid rgba(18, 57, 15, 0.42);
+            background: transparent;
+        }
+
+        .player-strip {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            width: var(--board-size);
+            margin: 8px auto 0;
+            padding: 9px 12px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: rgba(3, 28, 11, 0.62);
+        }
+
+        .player-avatar {
+            display: grid;
+            place-items: center;
+            height: 46px;
+            width: 46px;
+            border-radius: 9px;
+            background: linear-gradient(145deg, #58f071, #23b94d);
+            color: rgba(231, 255, 226, 0.34);
+            font-weight: 950;
+            overflow: hidden;
+        }
+
+        .player-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .player-strip h2 {
+            margin: 0;
+            font-size: 21px;
+        }
+
+        .player-strip p {
+            margin: 3px 0 0;
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .coach-panel {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: rgba(0, 10, 4, 0.82);
+            box-shadow: 0 0 54px rgba(80, 240, 106, 0.12);
+            overflow: hidden;
+            max-height: calc(100vh - 82px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .coach-header {
+            padding: 10px 16px;
+            border-bottom: 1px solid rgba(80, 240, 106, 0.22);
+            text-align: center;
+        }
+
+        .coach-header h2 {
+            margin: 0;
+            font-size: 27px;
+        }
+
+        .coach-body {
+            padding: 14px 16px;
+            overflow-y: auto;
+        }
+
+        .coach-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .coach-body::-webkit-scrollbar-track {
+            background: rgba(0, 12, 4, 0.86);
+        }
+
+        .coach-body::-webkit-scrollbar-thumb {
+            background: rgba(80, 240, 106, 0.85);
+            border-radius: 999px;
+        }
+
+        .speech-row {
+            display: grid;
+            grid-template-columns: 58px minmax(0, 1fr);
+            gap: 14px;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .coach-avatar {
+            display: grid;
+            place-items: center;
+            width: 58px;
+            height: 58px;
+            border-radius: 9px;
+            background: linear-gradient(145deg, rgba(80, 240, 106, 0.25), rgba(0, 8, 4, 0.9));
+            color: var(--green);
+            font-size: 26px;
+            font-weight: 950;
+            border: 1px solid var(--line);
+            box-shadow: 0 0 24px rgba(80, 240, 106, 0.22);
+        }
+
+        .speech {
+            position: relative;
+            min-height: 64px;
+            padding: 13px 15px;
+            border-radius: 8px;
+            background: #f2f4e9;
+            color: #172018;
+            font-size: 17px;
+            font-weight: 900;
+            line-height: 1.35;
+        }
+
+        .speech::before {
+            content: "";
+            position: absolute;
+            left: -14px;
+            top: 28px;
+            width: 0;
+            height: 0;
+            border-top: 12px solid transparent;
+            border-bottom: 12px solid transparent;
+            border-right: 15px solid #f2f4e9;
+        }
+
+        .coach-meta {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 18px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(80, 240, 106, 0.22);
+        }
+
+        .coach-meta h3 {
+            margin: 0;
+            font-size: 25px;
+        }
+
+        .coach-meta span {
+            color: var(--green-soft);
+            font-size: 19px;
+            font-weight: 950;
+        }
+
+        .objective {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(80, 240, 106, 0.22);
+        }
+
+        .eyebrow {
+            margin: 0 0 8px;
+            color: var(--green);
+            font-size: 14px;
+            font-weight: 950;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .objective h4,
+        .feedback h4 {
+            margin: 0 0 10px;
+            font-size: 19px;
+        }
+
+        .objective p,
+        .feedback p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 15px;
+            font-weight: 800;
+            line-height: 1.45;
+        }
+
+        .feedback {
+            padding: 13px 0;
+            border-bottom: 1px solid rgba(80, 240, 106, 0.22);
+        }
+
+        .feedback.error h4 {
+            color: var(--red);
+        }
+
+        .feedback.success h4 {
+            color: var(--green);
+        }
+
+        .hint-box {
+            margin-top: 10px;
+            padding: 11px 13px;
+            border-left: 5px solid var(--green);
+            background: rgba(80, 240, 106, 0.08);
+            color: var(--text);
+            font-size: 15px;
+            font-weight: 900;
+            line-height: 1.35;
+        }
+
+        .line-box {
+            margin-top: 10px;
+            color: rgba(242, 248, 239, 0.72);
+            font-size: 15px;
+            font-weight: 900;
+            line-height: 1.4;
+        }
+
+        .voice-row {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr) auto;
+            gap: 9px;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .speak-button {
+            min-height: 38px;
+            padding: 8px 12px;
+            white-space: nowrap;
+        }
+
+        .voice-select {
+            min-width: 0;
+            height: 38px;
+            border: 1px solid rgba(80, 240, 106, 0.4);
+            border-radius: 8px;
+            background: rgba(0, 12, 4, 0.9);
+            color: var(--text);
+            padding: 0 10px;
+            font-weight: 850;
+        }
+
+        .auto-voice {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            min-height: 38px;
+            padding: 8px 10px;
+            border: 1px solid rgba(80, 240, 106, 0.4);
+            border-radius: 8px;
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 900;
+        }
+
+        .auto-voice input {
+            accent-color: var(--green);
+        }
+
+        .button-row {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 9px;
+            padding-top: 12px;
+        }
+
+        .button,
+        .button-secondary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 42px;
+            border-radius: 8px;
+            border: 1px solid rgba(80, 240, 106, 0.48);
+            background: rgba(4, 28, 10, 0.9);
+            color: var(--green);
+            font-weight: 950;
+        }
+
+        .button {
+            background: linear-gradient(135deg, #65f36d, #27c951);
+            color: #031007;
+        }
+
+        .button:disabled {
+            cursor: not-allowed;
+            opacity: 0.45;
+            filter: grayscale(0.8);
+        }
+
+        .rated-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 116px;
+            min-height: 42px;
+            padding: 10px 12px;
+            border: 1px solid rgba(80, 240, 106, 0.5);
+            border-radius: 999px;
+            background: rgba(18, 70, 28, 0.38);
+            color: var(--green);
+            font-weight: 950;
+            white-space: nowrap;
+        }
+
+        .rated-help {
+            margin: 14px 0 0;
+            padding: 12px 14px;
+            border: 1px solid rgba(80, 240, 106, 0.24);
+            border-radius: 8px;
+            background: rgba(80, 240, 106, 0.06);
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 850;
+            line-height: 1.35;
+        }
+
+        .rated-pill.active {
+            background: linear-gradient(135deg, #65f36d, #27c951);
+            color: #031007;
+            box-shadow: 0 0 24px rgba(80, 240, 106, 0.28);
+        }
+
+        .rated-pill:disabled {
+            cursor: not-allowed;
+            opacity: 0.66;
+        }
+
+        .promotion-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 20;
+            display: none;
+            place-items: center;
+            padding: 22px;
+            background: rgba(0, 4, 2, 0.72);
+            backdrop-filter: blur(8px);
+        }
+
+        .promotion-modal.open {
+            display: grid;
+        }
+
+        .promotion-card {
+            width: min(100%, 430px);
+            border: 1px solid rgba(80, 240, 106, 0.55);
+            border-radius: 8px;
+            background: #020d05;
+            box-shadow: 0 0 54px rgba(80, 240, 106, 0.22);
+            padding: 26px;
+        }
+
+        .promotion-card h2 {
+            margin: 0 0 10px;
+            font-size: 30px;
+        }
+
+        .promotion-card p {
+            margin: 0 0 20px;
+            color: var(--muted);
+            font-size: 17px;
+            font-weight: 800;
+        }
+
+        .promotion-options {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .promotion-option {
+            min-height: 74px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: rgba(3, 28, 11, 0.85);
+        }
+
+        .promotion-option img {
+            width: 56px;
+            height: 56px;
+            object-fit: contain;
+            filter: drop-shadow(0 5px 4px rgba(0, 0, 0, 0.45));
+        }
+
+        @media (max-width: 1120px) {
+            body {
+                overflow: auto;
+            }
+
+            .puzzle-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .coach-panel {
+                width: min(100%, 760px);
+                margin: 0 auto;
+            }
+        }
+
+        @media (max-width: 760px) {
+            .page {
+                padding: 20px 16px 34px;
+            }
+
+            .navbar {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .nav-links {
+                width: 100%;
+                gap: 22px;
+                overflow-x: auto;
+                padding-bottom: 6px;
+            }
+
+            .auth-links {
+                width: 100%;
+            }
+
+            .puzzle-top,
+            .coach-meta {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .speech-row {
+                grid-template-columns: 52px minmax(0, 1fr);
+            }
+
+            .coach-avatar {
+                width: 52px;
+                height: 52px;
+            }
+
+            .speech {
+                font-size: 17px;
+            }
+
+            .button-row {
+                grid-template-columns: 1fr;
+            }
+
+            .voice-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+
+        /* Keep the site mark consistent across every page. */
+        .logo-mark,
+        .brand-mark {
+            color: rgba(231, 255, 226, 0.34) !important;
+            text-shadow: 0 0 10px rgba(240, 255, 236, 0.18);
+        }
+
+        .nav-avatar {
+            color: #061107;
+        }
+    </style>
+</head>
+<body>
+    {{ puzzle_state|json_script:"puzzle-data" }}
+
+    <main class="page">
+                <!-- Puzzle detail navbar keeps users oriented during training. -->
+<nav class="navbar">
+            <a href="{% url 'home' %}" class="logo">
+                <span class="logo-mark">♞</span>
+                Chess <span>Tutor</span>
+            </a>
+
+            <div class="nav-links">
+                <a href="{% url 'play' %}">Play</a>
+                <a href="{% url 'tutors' %}">Tutors</a>
+                <a href="{% url 'puzzles' %}" class="active">Puzzles</a>
+                <a href="{% url 'dashboard' %}">Dashboard</a>
+            </div>
+
+            <div class="auth-links">
+                <span class="profile-link">
+                    <span class="nav-avatar">
+                        {% if account_profile.avatar %}
+                            <img src="{{ account_profile.avatar.url }}" alt="{{ request.user.username }} profile picture">
+                        {% else %}
+                            {{ request.user.username|slice:":2"|upper }}
+                        {% endif %}
+                    </span>
+                    <span class="profile-copy">
+                        <span>{{ request.user.username }}</span>
+                    </span>
+                </span>
+                <a href="{% url 'account_settings' %}" class="auth-button">Settings</a>
+            </div>
+        </nav>
+
+        
+        <!-- Puzzle shell holds the board, coach panel and rated controls. -->
+<section class="puzzle-shell">
+            <div class="board-column">
+                <div class="puzzle-top">
+                    <div class="puzzle-title-row">
+                        <span class="category-number">{{ puzzle.number }}</span>
+                        <div>
+                            <h1 class="puzzle-name">{{ puzzle.name }}</h1>
+                            <p class="puzzle-meta">{{ puzzle.level }} - {{ puzzle.rating }} ELO puzzle</p>
+                        </div>
+                    </div>
+                    <div class="puzzle-title-row">
+                        <button type="button" class="rated-pill" id="ratedButton">Rated Off</button>
+                        <span class="move-pill" id="movePill">Puzzle 1 / {{ puzzle_count }}</span>
+                    </div>
+                </div>
+
+                <div class="board-frame">
+                    <div class="board" id="puzzleBoard" aria-label="{{ puzzle.name }} puzzle board"></div>
+                </div>
+
+                <div class="player-strip">
+                    <span class="player-avatar">
+                        {% if account_profile.avatar %}
+                            <img src="{{ account_profile.avatar.url }}" alt="{{ request.user.username }} profile picture">
+                        {% else %}
+                            {{ request.user.username|slice:":2"|upper }}
+                        {% endif %}
+                    </span>
+                    <div>
+                        <h2>{{ request.user.username }}</h2>
+                        <p>Puzzle training - find the best move</p>
+                    </div>
+                </div>
+            </div>
+
+            <aside class="coach-panel">
+                <div class="coach-header">
+                    <h2>Puzzle Coach</h2>
+                </div>
+
+                <div class="coach-body">
+                    <div class="speech-row">
+                        <div class="coach-avatar">{{ puzzle.number }}</div>
+                        <p class="speech" id="speechText">{{ puzzle.objective }}</p>
+                    </div>
+
+                    <div class="coach-meta">
+                        <h3>{{ puzzle.name }}</h3>
+                        <span id="ratingPill">{{ puzzle_rating }} puzzle rating</span>
+                    </div>
+
+                    <div class="objective">
+                        <p class="eyebrow">Category Goal</p>
+                        <h4>{{ puzzle.objective }}</h4>
+                        <p>{{ puzzle.hint }}</p>
+                        <div class="rated-help" id="ratedHelp">Rated mode: +10 ELO for a perfect puzzle, -5 ELO if you use a hint, reset, view the solution or miss the line. Each puzzle pays rating once.</div>
+                    </div>
+
+                    <div class="feedback" id="feedbackBox">
+                        <p class="eyebrow">Live Puzzle Feedback</p>
+                        <h4 id="feedbackTitle">Find the tactic</h4>
+                        <p id="feedbackText">Click or drag a piece. Legal move dots will appear, but only the puzzle line continues.</p>
+                        <div class="voice-row">
+                            <button type="button" class="button-secondary speak-button" id="speakButton">Replay Voice</button>
+                            <select id="voiceSelect" class="voice-select" aria-label="Puzzle coach voice"></select>
+                            <label class="auto-voice">
+                                <input type="checkbox" id="autoSpeakToggle" checked>
+                                Auto
+                            </label>
+                        </div>
+                        <div class="hint-box" id="hintBox">Theme: {{ puzzle.name }}. Look for the move that matches this category.</div>
+                        <div class="line-box" id="lineBox"></div>
+                    </div>
+
+                    <div class="button-row">
+                        <a href="{% url 'puzzles' %}" class="button-secondary">Back to Puzzles</a>
+                        <button type="button" class="button-secondary" id="hintButton">Hint</button>
+                        <button type="button" class="button-secondary" id="solutionButton">View Solution</button>
+                        <button type="button" class="button" id="resetButton">Reset Puzzle</button>
+                        <button type="button" class="button" id="nextButton" disabled>Next Puzzle</button>
+                    </div>
+                </div>
+            </aside>
+        </section>
+    </main>
+
+    <div class="promotion-modal" id="promotionModal" aria-hidden="true">
+        <div class="promotion-card">
+            <h2>Choose Promotion</h2>
+            <p>This puzzle wants a queen. Other promotions may be legal, but they are not the best move here.</p>
+            <div class="promotion-options">
+                <button type="button" class="promotion-option" data-promotion="q" aria-label="Promote to queen">
+                    <img src="{% static 'main/pieces/neo/wq.png' %}" alt="">
+                </button>
+                <button type="button" class="promotion-option" data-promotion="r" aria-label="Promote to rook">
+                    <img src="{% static 'main/pieces/neo/wr.png' %}" alt="">
+                </button>
+                <button type="button" class="promotion-option" data-promotion="b" aria-label="Promote to bishop">
+                    <img src="{% static 'main/pieces/neo/wb.png' %}" alt="">
+                </button>
+                <button type="button" class="promotion-option" data-promotion="n" aria-label="Promote to knight">
+                    <img src="{% static 'main/pieces/neo/wn.png' %}" alt="">
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const category = JSON.parse(document.getElementById("puzzle-data").textContent);
+        const boardElement = document.getElementById("puzzleBoard");
+        const movePill = document.getElementById("movePill");
+        const speechText = document.getElementById("speechText");
+        const feedbackBox = document.getElementById("feedbackBox");
+        const feedbackTitle = document.getElementById("feedbackTitle");
+        const feedbackText = document.getElementById("feedbackText");
+        const speakButton = document.getElementById("speakButton");
+        const voiceSelect = document.getElementById("voiceSelect");
+        const autoSpeakToggle = document.getElementById("autoSpeakToggle");
+        const hintBox = document.getElementById("hintBox");
+        const lineBox = document.getElementById("lineBox");
+        const resetButton = document.getElementById("resetButton");
+        const nextButton = document.getElementById("nextButton");
+        const hintButton = document.getElementById("hintButton");
+        const solutionButton = document.getElementById("solutionButton");
+        const ratedButton = document.getElementById("ratedButton");
+        const ratingPill = document.getElementById("ratingPill");
+        const promotionModal = document.getElementById("promotionModal");
+        const ratedEndpoint = "{% url 'puzzle_rated_result' puzzle.slug %}";
+        const queryParams = new URLSearchParams(window.location.search);
+
+        const pieceImages = {
+            wp: "{% static 'main/pieces/neo/wp.png' %}",
+            wn: "{% static 'main/pieces/neo/wn.png' %}",
+            wb: "{% static 'main/pieces/neo/wb.png' %}",
+            wr: "{% static 'main/pieces/neo/wr.png' %}",
+            wq: "{% static 'main/pieces/neo/wq.png' %}",
+            wk: "{% static 'main/pieces/neo/wk.png' %}",
+            bp: "{% static 'main/pieces/neo/bp.png' %}",
+            bn: "{% static 'main/pieces/neo/bn.png' %}",
+            bb: "{% static 'main/pieces/neo/bb.png' %}",
+            br: "{% static 'main/pieces/neo/br.png' %}",
+            bq: "{% static 'main/pieces/neo/bq.png' %}",
+            bk: "{% static 'main/pieces/neo/bk.png' %}",
+        };
+
+        const pieceNames = {
+            p: "pawn",
+            n: "knight",
+            b: "bishop",
+            r: "rook",
+            q: "queen",
+            k: "king",
+        };
+
+        let pieces = {};
+        let puzzleIndex = 0;
+        let stepIndex = 0;
+        let playedLine = [];
+        let selectedSquare = null;
+        let legalTargets = [];
+        let solved = false;
+        let waitingForReply = false;
+        let wrongSquares = [];
+        let correctSquares = [];
+        let hintSquares = [];
+        let pendingPromotion = null;
+        let ratedMode = queryParams.get("rated") === "1";
+        let mistakesThisPuzzle = 0;
+        let ratedSubmitted = false;
+        let ratedAttempts = new Set(category.rated_attempts || []);
+        let availableVoices = [];
+        const voiceStorageKey = "chessTutorPuzzleVoice";
+        const autoVoiceStorageKey = "chessTutorPuzzleAutoVoice";
+
+        function currentPuzzle() {
+            return category.puzzles[puzzleIndex];
+        }
+
+        function currentStep() {
+            return currentPuzzle().steps[stepIndex];
+        }
+
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+
+            if (parts.length === 2) {
+                return parts.pop().split(";").shift();
+            }
+
+            return "";
+        }
+
+        function chooseDefaultVoice() {
+            const savedVoice = localStorage.getItem(voiceStorageKey);
+
+            return availableVoices.find((voice) => voice.name === savedVoice)
+                || availableVoices.find((voice) => /Google UK English Male/i.test(voice.name))
+                || availableVoices.find((voice) => voice.lang === "en-GB" && /Daniel|George|male/i.test(voice.name))
+                || availableVoices.find((voice) => voice.lang === "en-GB")
+                || availableVoices.find((voice) => voice.lang && voice.lang.startsWith("en"))
+                || availableVoices[0];
+        }
+
+        function populateVoiceSelect() {
+            if (!voiceSelect || !("speechSynthesis" in window)) {
+                return;
+            }
+
+            availableVoices = window.speechSynthesis.getVoices();
+
+            if (!availableVoices.length) {
+                return;
+            }
+
+            const chosenVoice = chooseDefaultVoice();
+            voiceSelect.innerHTML = "";
+
+            availableVoices.forEach((voice) => {
+                const option = document.createElement("option");
+                option.value = voice.name;
+                option.textContent = `${voice.name} (${voice.lang})`;
+                option.selected = chosenVoice && voice.name === chosenVoice.name;
+                voiceSelect.appendChild(option);
+            });
+        }
+
+        function selectedVoice() {
+            if (!availableVoices.length) {
+                availableVoices = "speechSynthesis" in window ? window.speechSynthesis.getVoices() : [];
+            }
+
+            return availableVoices.find((voice) => voice.name === voiceSelect.value) || chooseDefaultVoice();
+        }
+
+        function latestSpeechText() {
+            return `${feedbackTitle.textContent}. ${feedbackText.textContent}`;
+        }
+
+        function speakPuzzleText(text = latestSpeechText()) {
+            if (!("speechSynthesis" in window) || !text.trim()) {
+                return;
+            }
+
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            const voice = selectedVoice();
+
+            if (voice) {
+                utterance.voice = voice;
+                utterance.lang = voice.lang;
+            } else {
+                utterance.lang = "en-GB";
+            }
+
+            utterance.rate = 0.94;
+            utterance.pitch = 0.96;
+            utterance.volume = 0.92;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function autoSpeak(text = latestSpeechText()) {
+            if (autoSpeakToggle && autoSpeakToggle.checked) {
+                speakPuzzleText(text);
+            }
+        }
+
+        function markImperfect() {
+            if (!ratedSubmitted) {
+                mistakesThisPuzzle += 1;
+            }
+        }
+
+        function currentPuzzleAttempted() {
+            return ratedAttempts.has(puzzleIndex);
+        }
+
+        function puzzleInstruction() {
+            return currentPuzzle().instruction || category.objective;
+        }
+
+        function updateNavRating() {
+            document.querySelectorAll(".nav-rating").forEach((element) => {
+                element.textContent = `${category.player_rating} ELO`;
+            });
+        }
+
+        function updateRatedUi() {
+            const alreadyRecorded = currentPuzzleAttempted();
+            ratedButton.textContent = alreadyRecorded ? "Rated Done" : (ratedMode ? "Rated: On" : "Rated: Off");
+            ratedButton.disabled = alreadyRecorded;
+            ratedButton.classList.toggle("active", ratedMode && !alreadyRecorded);
+            ratingPill.textContent = `${category.player_rating} puzzle rating`;
+            updateNavRating();
+        }
+
+        function resetPieces(clearRatedState = true) {
+            pieces = {};
+            currentPuzzle().pieces.forEach((item) => {
+                pieces[item.square] = item.piece;
+            });
+            stepIndex = 0;
+            playedLine = [];
+            selectedSquare = null;
+            legalTargets = [];
+            solved = false;
+            waitingForReply = false;
+            wrongSquares = [];
+            correctSquares = [];
+            hintSquares = [];
+            pendingPromotion = null;
+            if (clearRatedState) {
+                mistakesThisPuzzle = 0;
+                ratedSubmitted = false;
+            }
+            nextButton.disabled = true;
+            hintButton.disabled = false;
+            solutionButton.disabled = false;
+            nextButton.textContent = puzzleIndex === category.puzzles.length - 1 ? "Finish Category" : "Next Puzzle";
+            promotionModal.classList.remove("open");
+            promotionModal.setAttribute("aria-hidden", "true");
+            setFeedback("Find the tactic", "Click or drag a piece. Legal move dots will appear, but only the puzzle line continues.", "neutral");
+            speechText.textContent = `${category.name}: ${puzzleInstruction()}`;
+            hintBox.textContent = `${currentPuzzle().title} of ${category.puzzles.length}. ${puzzleInstruction()}`;
+            lineBox.textContent = currentPuzzleAttempted()
+                ? "Rated result already recorded for this puzzle. You can still train it, but it will not change your rating again."
+                : (ratedMode ? "Rated mode is on: +10 for a perfect solve, -5 if you miss the line or use help." : "Rated mode is off. Turn it on before solving to play for +10 / -5 ELO.");
+            updateRatedUi();
+            updateMovePill();
+            renderBoard();
+        }
+
+        function squareName(fileIndex, rank) {
+            return `${String.fromCharCode(97 + fileIndex)}${rank}`;
+        }
+
+        function activeColorCode() {
+            const step = currentStep();
+
+            if (step && step.legal_moves.length) {
+                const fromSquare = step.legal_moves[0].slice(0, 2);
+                return pieces[fromSquare] ? pieces[fromSquare][0] : "w";
+            }
+
+            return currentPuzzle().turn === "black" ? "b" : "w";
+        }
+
+        function renderBoard() {
+            boardElement.innerHTML = "";
+
+            const whiteToMove = currentPuzzle().turn !== "black";
+            const visibleRanks = whiteToMove ? [8, 7, 6, 5, 4, 3, 2, 1] : [1, 2, 3, 4, 5, 6, 7, 8];
+            const visibleFiles = whiteToMove ? [0, 1, 2, 3, 4, 5, 6, 7] : [7, 6, 5, 4, 3, 2, 1, 0];
+
+            visibleRanks.forEach((rank) => {
+                visibleFiles.forEach((fileIndex) => {
+                    const square = squareName(fileIndex, rank);
+                    const piece = pieces[square];
+                    const squareElement = document.createElement("div");
+                    const isLight = (rank + fileIndex) % 2 === 1;
+
+                    squareElement.className = `square ${isLight ? "light" : "dark"}`;
+                    squareElement.dataset.square = square;
+
+                    if (piece) {
+                        squareElement.classList.add("has-piece");
+                    }
+
+                    if (square === selectedSquare) {
+                        squareElement.classList.add("selected");
+                    }
+
+                    if (legalTargets.includes(square)) {
+                        squareElement.classList.add("legal-target");
+                        const dot = document.createElement("span");
+                        dot.className = "legal-dot";
+                        squareElement.appendChild(dot);
+                    }
+
+                    if (wrongSquares.includes(square)) {
+                        squareElement.classList.add("wrong");
+                    }
+
+                    if (correctSquares.includes(square)) {
+                        squareElement.classList.add("correct");
+                    }
+
+                    if (hintSquares.includes(square)) {
+                        squareElement.classList.add("hint-piece");
+                    }
+
+                    if (fileIndex === visibleFiles[0]) {
+                        const rankLabel = document.createElement("span");
+                        rankLabel.className = "coord rank-label";
+                        rankLabel.textContent = rank;
+                        squareElement.appendChild(rankLabel);
+                    }
+
+                    if (rank === visibleRanks[visibleRanks.length - 1]) {
+                        const fileLabel = document.createElement("span");
+                        fileLabel.className = "coord file-label";
+                        fileLabel.textContent = String.fromCharCode(97 + fileIndex);
+                        squareElement.appendChild(fileLabel);
+                    }
+
+                    if (piece) {
+                        const img = document.createElement("img");
+                        img.className = "piece";
+                        img.src = pieceImages[piece];
+                        img.alt = pieceNames[piece[1]];
+                        img.draggable = !solved && piece[0] === activeColorCode();
+                        img.addEventListener("dragstart", (event) => handleDragStart(event, square));
+                        img.addEventListener("dragend", () => img.classList.remove("dragging"));
+                        squareElement.appendChild(img);
+                    }
+
+                    squareElement.addEventListener("click", () => handleSquareClick(square));
+                    squareElement.addEventListener("dragover", (event) => event.preventDefault());
+                    squareElement.addEventListener("drop", (event) => handleDrop(event, square));
+                    boardElement.appendChild(squareElement);
+                });
+            });
+        }
+
+        function refreshBoardHighlights() {
+            document.querySelectorAll(".square").forEach((squareElement) => {
+                const square = squareElement.dataset.square;
+
+                squareElement.classList.toggle("selected", square === selectedSquare);
+                squareElement.classList.toggle("wrong", wrongSquares.includes(square));
+                squareElement.classList.toggle("correct", correctSquares.includes(square));
+                squareElement.classList.toggle("hint-piece", hintSquares.includes(square));
+                squareElement.classList.toggle("legal-target", legalTargets.includes(square));
+
+                squareElement.querySelectorAll(".legal-dot").forEach((dot) => dot.remove());
+
+                if (legalTargets.includes(square)) {
+                    const dot = document.createElement("span");
+                    dot.className = "legal-dot";
+                    squareElement.prepend(dot);
+                }
+            });
+        }
+
+        function movesFrom(square) {
+            const step = currentStep();
+            return step ? step.legal_moves.filter((move) => move.slice(0, 2) === square) : [];
+        }
+
+        function selectSquare(square) {
+            if (solved || waitingForReply || !pieces[square] || pieces[square][0] !== activeColorCode()) {
+                return;
+            }
+
+            selectedSquare = square;
+            legalTargets = [...new Set(movesFrom(square).map((move) => move.slice(2, 4)))];
+            wrongSquares = [];
+            refreshBoardHighlights();
+        }
+
+        function handleSquareClick(square) {
+            if (solved || waitingForReply) {
+                return;
+            }
+
+            if (!selectedSquare) {
+                selectSquare(square);
+                return;
+            }
+
+            if (square === selectedSquare) {
+                selectedSquare = null;
+                legalTargets = [];
+                refreshBoardHighlights();
+                return;
+            }
+
+            if (pieces[square] && pieces[square][0] === activeColorCode()) {
+                selectSquare(square);
+                return;
+            }
+
+            tryMove(selectedSquare, square);
+        }
+
+        function handleDragStart(event, square) {
+            if (solved || waitingForReply || !pieces[square] || pieces[square][0] !== activeColorCode()) {
+                event.preventDefault();
+                return;
+            }
+
+            selectedSquare = square;
+            legalTargets = [...new Set(movesFrom(square).map((move) => move.slice(2, 4)))];
+            wrongSquares = [];
+            event.dataTransfer.setData("text/plain", square);
+            event.dataTransfer.effectAllowed = "move";
+            event.dataTransfer.setDragImage(event.currentTarget, event.currentTarget.width / 2, event.currentTarget.height / 2);
+            event.currentTarget.classList.add("dragging");
+            refreshBoardHighlights();
+        }
+
+        function handleDrop(event, targetSquare) {
+            event.preventDefault();
+            const fromSquare = event.dataTransfer.getData("text/plain");
+
+            if (!fromSquare || solved || waitingForReply) {
+                return;
+            }
+
+            tryMove(fromSquare, targetSquare);
+        }
+
+        function matchingLegalMoves(fromSquare, targetSquare) {
+            const step = currentStep();
+
+            if (!step) {
+                return [];
+            }
+
+            return step.legal_moves.filter((move) => (
+                move.slice(0, 2) === fromSquare && move.slice(2, 4) === targetSquare
+            ));
+        }
+
+        function tryMove(fromSquare, targetSquare, promotionPiece = null) {
+            const matches = matchingLegalMoves(fromSquare, targetSquare);
+
+            if (!matches.length) {
+                markImperfect();
+                wrongSquares = [fromSquare, targetSquare];
+                setFeedback("Illegal move", "That move is not legal in this position. Try another square.", "error");
+                renderBoard();
+                return;
+            }
+
+            const promotionMoves = matches.filter((move) => move.length === 5);
+
+            if (promotionMoves.length && !promotionPiece) {
+                pendingPromotion = { fromSquare, targetSquare };
+                promotionModal.classList.add("open");
+                promotionModal.setAttribute("aria-hidden", "false");
+                return;
+            }
+
+            const move = promotionPiece
+                ? matches.find((candidate) => candidate[4] === promotionPiece)
+                : matches[0];
+
+            if (!move) {
+                markImperfect();
+                setFeedback("Legal move", "That promotion is legal, but this puzzle is asking for the best promotion.", "error");
+                return;
+            }
+
+            const step = currentStep();
+
+            if (!step || move !== step.expected) {
+                markImperfect();
+                selectedSquare = null;
+                legalTargets = [];
+                wrongSquares = [fromSquare, targetSquare];
+                setFeedback("Legal move", `That move is legal, but it is not the ${category.name.toLowerCase()} tactic. Use the hint and try again.`, "error");
+                speechText.textContent = "Legal move, but the puzzle line has a stronger answer.";
+                hintBox.textContent = currentPuzzle().instruction || category.hint;
+                renderBoard();
+                return;
+            }
+
+            applyMove(move);
+            playedLine.push(step.expected_san);
+            selectedSquare = null;
+            legalTargets = [];
+            wrongSquares = [];
+            hintSquares = [];
+            correctSquares = [fromSquare, targetSquare];
+            updateLineBox();
+            renderBoard();
+
+            if (step.reply) {
+                waitingForReply = true;
+                setFeedback("Correct move", `Good. ${step.expected_san} starts the line. The opponent is thinking...`, "success");
+                speechText.textContent = `Correct. Watch the reply, then continue the ${category.name.toLowerCase()} line.`;
+                hintBox.textContent = "The opponent reply will appear on the board, then it is your move again.";
+                updateMovePill("Opponent reply");
+
+                window.setTimeout(() => {
+                    applyMove(step.reply);
+                    playedLine.push(step.reply_san);
+                    stepIndex += 1;
+                    waitingForReply = false;
+                    selectedSquare = null;
+                    legalTargets = [];
+                    wrongSquares = [];
+                    correctSquares = [step.reply.slice(0, 2), step.reply.slice(2, 4)];
+                    updateLineBox();
+
+                    if (stepIndex >= currentPuzzle().steps.length) {
+                        completePuzzle();
+                    } else {
+                        setFeedback("Continue the line", `Opponent played ${step.reply_san}. Find the next move.`, "neutral");
+                        speechText.textContent = `Opponent played ${step.reply_san}. Keep solving.`;
+                        hintBox.textContent = currentPuzzle().instruction || category.hint;
+                        updateMovePill();
+                        renderBoard();
+                    }
+                }, 620);
+                return;
+            }
+
+            stepIndex += 1;
+            completePuzzle();
+        }
+
+        function completePuzzle() {
+            solved = true;
+            waitingForReply = false;
+            selectedSquare = null;
+            legalTargets = [];
+            wrongSquares = [];
+            hintSquares = [];
+            setFeedback("Solved", category.success, "success");
+            speechText.textContent = `${currentPuzzle().title} solved. ${category.success}`;
+            hintBox.textContent = `Solution line: ${currentPuzzle().solution_san.join(" ")}`;
+            nextButton.disabled = false;
+            hintButton.disabled = true;
+            solutionButton.disabled = true;
+            submitRatedResult();
+            updateMovePill("Solved");
+            renderBoard();
+        }
+
+        function applyMove(move) {
+            const fromSquare = move.slice(0, 2);
+            const targetSquare = move.slice(2, 4);
+            const promotionPiece = move[4];
+            const piece = pieces[fromSquare];
+            delete pieces[fromSquare];
+            pieces[targetSquare] = promotionPiece ? `${piece[0]}${promotionPiece}` : piece;
+        }
+
+        function updateMovePill(customText = "") {
+            if (customText) {
+                movePill.textContent = customText;
+                return;
+            }
+
+            const stepTotal = currentPuzzle().steps.length;
+            movePill.textContent = `${puzzleIndex + 1}/${category.puzzles.length} · Step ${stepIndex + 1}/${stepTotal}`;
+        }
+
+        function updateLineBox() {
+            lineBox.textContent = playedLine.length ? `Line: ${playedLine.join(" ")}` : "";
+        }
+
+        function showHint() {
+            const step = currentStep();
+
+            if (!step || solved || waitingForReply) {
+                return;
+            }
+
+            if (!hintSquares.length) {
+                markImperfect();
+            }
+
+            const fromSquare = step.expected.slice(0, 2);
+            const piece = pieces[fromSquare];
+            hintSquares = [fromSquare];
+            correctSquares = [];
+            wrongSquares = [];
+            setFeedback("Hint", `Move the highlighted ${piece ? pieceNames[piece[1]] : "piece"} to continue the tactic.`, "neutral");
+            speechText.textContent = "Hint used. The highlighted piece starts the puzzle line.";
+            hintBox.textContent = `The piece to move is on ${fromSquare}. View Solution will reveal the full line.`;
+            renderBoard();
+        }
+
+        function viewSolution() {
+            if (ratedSubmitted) {
+                return;
+            }
+
+            markImperfect();
+            pieces = {};
+            currentPuzzle().pieces.forEach((item) => {
+                pieces[item.square] = item.piece;
+            });
+            currentPuzzle().solution.forEach((move) => applyMove(move));
+
+            const firstMove = currentPuzzle().solution[0] || "";
+            const lastMove = currentPuzzle().solution[currentPuzzle().solution.length - 1] || firstMove;
+            solved = true;
+            waitingForReply = false;
+            selectedSquare = null;
+            legalTargets = [];
+            wrongSquares = [];
+            hintSquares = [];
+            correctSquares = lastMove ? [lastMove.slice(0, 2), lastMove.slice(2, 4)] : [];
+            playedLine = [...currentPuzzle().solution_san];
+            setFeedback("Solution shown", `Solution: ${currentPuzzle().solution_san.join(" ")}`, "neutral");
+            speechText.textContent = `Solution shown. The first move was ${currentPuzzle().solution_san[0]}.`;
+            hintBox.textContent = firstMove ? `The first move starts from ${firstMove.slice(0, 2)} and goes to ${firstMove.slice(2, 4)}.` : (currentPuzzle().instruction || category.hint);
+            updateLineBox();
+            nextButton.disabled = false;
+            hintButton.disabled = true;
+            solutionButton.disabled = true;
+            updateMovePill("Solution");
+            submitRatedResult();
+            renderBoard();
+        }
+
+        function submitRatedResult() {
+            if (!ratedMode || ratedSubmitted || currentPuzzleAttempted()) {
+                return;
+            }
+
+            ratedSubmitted = true;
+            const perfect = mistakesThisPuzzle === 0;
+
+            fetch(ratedEndpoint, {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken"),
+                },
+                body: JSON.stringify({ perfect, puzzle_index: puzzleIndex }),
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    if (!data.ok) {
+                        hintBox.textContent = "Rated result could not be saved. Keep training and try again.";
+                        return;
+                    }
+
+                    category.player_rating = data.puzzle_rating;
+                    ratedAttempts.add(puzzleIndex);
+                    updateRatedUi();
+                    const sign = data.delta > 0 ? "+" : "";
+                    if (data.already_recorded) {
+                        lineBox.textContent = `${lineBox.textContent ? `${lineBox.textContent} | ` : ""}Rated already recorded for this puzzle. No extra ELO.`;
+                    } else {
+                        lineBox.textContent = `${lineBox.textContent ? `${lineBox.textContent} | ` : ""}Rated result: ${sign}${data.delta}. New puzzle rating: ${data.puzzle_rating}.`;
+                    }
+                })
+                .catch(() => {
+                    hintBox.textContent = "Rated result could not be saved. Check the server and try again.";
+                });
+        }
+
+        function setFeedback(title, text, type) {
+            feedbackTitle.textContent = title;
+            feedbackText.textContent = text;
+            feedbackBox.classList.remove("error", "success");
+
+            if (type === "error" || type === "success") {
+                feedbackBox.classList.add(type);
+            }
+
+            autoSpeak(`${title}. ${text}`);
+        }
+
+        if (localStorage.getItem(autoVoiceStorageKey) === "off") {
+            autoSpeakToggle.checked = false;
+        }
+
+        if ("speechSynthesis" in window) {
+            populateVoiceSelect();
+            window.speechSynthesis.onvoiceschanged = populateVoiceSelect;
+        } else if (voiceSelect) {
+            voiceSelect.disabled = true;
+            speakButton.disabled = true;
+            autoSpeakToggle.disabled = true;
+        }
+
+        speakButton.addEventListener("click", () => speakPuzzleText());
+
+        voiceSelect.addEventListener("change", () => {
+            localStorage.setItem(voiceStorageKey, voiceSelect.value);
+            speakPuzzleText();
+        });
+
+        autoSpeakToggle.addEventListener("change", () => {
+            localStorage.setItem(autoVoiceStorageKey, autoSpeakToggle.checked ? "on" : "off");
+        });
+
+        document.querySelectorAll(".promotion-option").forEach((button) => {
+            button.addEventListener("click", () => {
+                if (!pendingPromotion) {
+                    return;
+                }
+
+                const promotionPiece = button.dataset.promotion;
+                const { fromSquare, targetSquare } = pendingPromotion;
+                pendingPromotion = null;
+                promotionModal.classList.remove("open");
+                promotionModal.setAttribute("aria-hidden", "true");
+                tryMove(fromSquare, targetSquare, promotionPiece);
+            });
+        });
+
+        hintButton.addEventListener("click", showHint);
+        solutionButton.addEventListener("click", viewSolution);
+        ratedButton.addEventListener("click", () => {
+            if (ratedSubmitted || currentPuzzleAttempted()) {
+                return;
+            }
+
+            ratedMode = !ratedMode;
+            updateRatedUi();
+        });
+
+        resetButton.addEventListener("click", () => {
+            markImperfect();
+            resetPieces(false);
+        });
+
+        nextButton.addEventListener("click", () => {
+            if (nextButton.disabled) {
+                return;
+            }
+
+            if (puzzleIndex >= category.puzzles.length - 1) {
+                window.location.href = "{% url 'puzzles' %}";
+                return;
+            }
+
+            puzzleIndex += 1;
+            resetPieces();
+        });
+
+        resetPieces();
+    </script>
+</body>
+</html>

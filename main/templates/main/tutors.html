@@ -1,0 +1,484 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tutors | Chess Tutor</title>
+    <style>
+        :root {
+            --bg: #050806;
+            --panel: rgba(5, 24, 10, 0.94);
+            --panel-soft: rgba(8, 30, 13, 0.82);
+            --text: #f3f6ef;
+            --muted: #bdc8ba;
+            --green: #52e262;
+            --green-bright: #63f06f;
+            --line: rgba(84, 255, 122, 0.16);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background:
+                radial-gradient(circle at 68% 18%, rgba(58, 220, 88, 0.2), transparent 34%),
+                radial-gradient(circle at 16% 76%, rgba(58, 220, 88, 0.09), transparent 32%),
+                #050806;
+            color: var(--text);
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .page {
+            height: 100vh;
+            overflow: hidden;
+            padding: 18px 42px 24px;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(84, 255, 122, 0.14);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 26px;
+            font-weight: 900;
+        }
+
+        .logo-mark {
+            width: 38px;
+            height: 38px;
+            display: grid;
+            place-items: center;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #7cff82, #1f8f45);
+            color: rgba(231, 255, 226, 0.34);
+            font-size: 25px;
+            box-shadow: 0 0 28px rgba(84, 255, 122, 0.45);
+        }
+
+        .logo span {
+            color: var(--green);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 36px;
+            color: #c8d0c4;
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .nav-links a {
+            position: relative;
+            padding: 8px 0;
+        }
+
+        .nav-links a:hover,
+        .nav-links .active {
+            color: var(--green-bright);
+        }
+
+        .nav-links .active::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -14px;
+            height: 3px;
+            background: #53e35f;
+            box-shadow: 0 0 18px rgba(83, 227, 95, 0.8);
+        }
+
+        .auth-links,
+        .profile-link {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .auth-user {
+            color: #ffffff;
+            font-weight: 800;
+        }
+
+        .nav-avatar {
+            width: 34px;
+            height: 34px;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #7cff82, #1f8f45);
+            color: rgba(231, 255, 226, 0.34);
+            font-size: 0.82rem;
+            font-weight: 900;
+            box-shadow: 0 0 18px rgba(84, 255, 122, 0.32);
+        }
+
+        .nav-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .auth-button {
+            padding: 10px 18px;
+            border: 1px solid rgba(99, 240, 111, 0.45);
+            border-radius: 6px;
+            color: var(--green-bright);
+            font-weight: 800;
+            background: rgba(99, 240, 111, 0.08);
+        }
+
+        .tutor-shell {
+            max-width: 1520px;
+            height: calc(100vh - 86px);
+            margin: 0 auto;
+            padding-top: 28px;
+            display: grid;
+            grid-template-columns: minmax(360px, 0.58fr) minmax(0, 1fr);
+            gap: 28px;
+            align-items: start;
+        }
+
+        .hero-panel {
+            min-height: calc(100vh - 146px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 32px 10px 32px 0;
+        }
+
+        .kicker {
+            margin: 0 0 14px;
+            color: var(--green-bright);
+            font-size: 0.86rem;
+            font-weight: 900;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 0;
+            max-width: 620px;
+            font-size: clamp(3.4rem, 6.4vw, 6.8rem);
+            line-height: 0.95;
+            font-weight: 900;
+        }
+
+        h1 span {
+            color: var(--green);
+            text-shadow: 0 0 36px rgba(82, 226, 98, 0.42);
+        }
+
+        .hero-copy {
+            max-width: 520px;
+            margin: 22px 0 0;
+            color: var(--muted);
+            font-size: 1.05rem;
+            line-height: 1.55;
+            font-weight: 700;
+        }
+
+        .feature-row {
+            margin-top: 36px;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .feature {
+            padding-top: 14px;
+            border-top: 1px solid rgba(99, 240, 111, 0.28);
+        }
+
+        .feature strong {
+            display: block;
+            color: #ffffff;
+            font-size: 0.98rem;
+            margin-bottom: 6px;
+        }
+
+        .feature span {
+            color: #9faa9a;
+            font-size: 0.9rem;
+            line-height: 1.35;
+            font-weight: 700;
+        }
+
+        .tutor-list {
+            min-height: 0;
+            max-height: calc(100vh - 126px);
+            overflow: auto;
+            padding: 2px 10px 8px 0;
+            display: grid;
+            gap: 14px;
+            scrollbar-gutter: stable;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(99, 240, 111, 0.92) rgba(5, 24, 10, 0.82);
+        }
+
+        .tutor-list::-webkit-scrollbar {
+            width: 9px;
+        }
+
+        .tutor-list::-webkit-scrollbar-track {
+            background: rgba(5, 24, 10, 0.82);
+            border-radius: 999px;
+        }
+
+        .tutor-list::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #63f06f, #238c3f);
+            border: 2px solid rgba(5, 24, 10, 0.82);
+            border-radius: 999px;
+        }
+
+        .tutor-card {
+            display: grid;
+            grid-template-columns: 84px minmax(0, 1fr) auto;
+            gap: 18px;
+            align-items: center;
+            padding: 18px;
+            border-radius: 8px;
+            background: linear-gradient(145deg, rgba(5, 24, 10, 0.94), rgba(2, 10, 6, 0.96));
+            border: 1px solid rgba(99, 240, 111, 0.22);
+            box-shadow:
+                0 18px 42px rgba(0, 0, 0, 0.34),
+                0 0 28px rgba(82, 226, 98, 0.08);
+            transition: 0.2s ease;
+        }
+
+        .tutor-card:hover {
+            border-color: rgba(136, 244, 108, 0.55);
+            transform: translateY(-2px);
+            box-shadow: 0 0 38px rgba(118, 185, 71, 0.16);
+        }
+
+        .tutor-avatar {
+            width: 84px;
+            height: 84px;
+            overflow: hidden;
+            border-radius: 10px;
+            background: rgba(99, 240, 111, 0.08);
+            border: 1px solid rgba(99, 240, 111, 0.2);
+            box-shadow: 0 0 28px rgba(82, 226, 98, 0.12);
+        }
+
+        .tutor-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .tutor-name-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: baseline;
+        }
+
+        .tutor-name {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 900;
+        }
+
+        .tutor-elo {
+            color: var(--green-bright);
+            font-size: 0.95rem;
+            font-weight: 900;
+        }
+
+        .tutor-style {
+            margin: 4px 0 8px;
+            color: var(--green-bright);
+            font-size: 0.76rem;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .tutor-description {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.94rem;
+            line-height: 1.42;
+            font-weight: 700;
+        }
+
+        .tutor-action {
+            min-width: 126px;
+            min-height: 46px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #6df36f, #2fb84b);
+            color: rgba(231, 255, 226, 0.34);
+            font-weight: 900;
+        }
+
+        @media (max-width: 1120px) {
+            body,
+            .page {
+                height: auto;
+                min-height: 100vh;
+                overflow: auto;
+            }
+
+            .tutor-shell {
+                height: auto;
+                grid-template-columns: 1fr;
+            }
+
+            .hero-panel {
+                min-height: auto;
+                padding: 28px 0 10px;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .page {
+                padding: 18px;
+            }
+
+            .navbar {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 18px;
+            }
+
+            .nav-links {
+                width: 100%;
+                gap: 18px;
+                overflow-x: auto;
+                padding-bottom: 4px;
+            }
+
+            .tutor-card {
+                grid-template-columns: 68px minmax(0, 1fr);
+            }
+
+            .tutor-avatar {
+                width: 68px;
+                height: 68px;
+            }
+
+            .tutor-action {
+                grid-column: 2;
+                justify-self: start;
+            }
+
+            .feature-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+
+        /* Keep the site mark consistent across every page. */
+        .logo-mark,
+        .brand-mark {
+            color: rgba(231, 255, 226, 0.34) !important;
+            text-shadow: 0 0 10px rgba(240, 255, 236, 0.18);
+        }
+
+        .nav-avatar {
+            color: #061107;
+        }
+    </style>
+</head>
+<body>
+    <main class="page">
+                <!-- Tutor page keeps all coaches unlocked so students can choose their style. -->
+<nav class="navbar">
+            <a href="{% url 'home' %}" class="logo">
+                <span class="logo-mark">♞</span>
+                Chess <span>Tutor</span>
+            </a>
+
+            <div class="nav-links">
+                <a href="{% url 'play' %}">Play</a>
+                <a href="{% url 'tutors' %}" class="active">Tutors</a>
+                <a href="{% url 'puzzles' %}">Puzzles</a>
+                <a href="{% url 'dashboard' %}">Dashboard</a>
+            </div>
+
+            <div class="auth-links">
+                <span class="profile-link">
+                    <span class="nav-avatar">
+                        {% if account_profile.avatar %}
+                            <img src="{{ account_profile.avatar.url }}" alt="{{ request.user.username }} profile picture">
+                        {% else %}
+                            {{ request.user.username|slice:":2"|upper }}
+                        {% endif %}
+                    </span>
+                    <span class="auth-user">{{ request.user.username }}</span>
+                </span>
+                <a href="{% url 'account_settings' %}" class="auth-button">Settings</a>
+            </div>
+        </nav>
+
+        <section class="tutor-shell">
+            <div class="hero-panel">
+                <p class="kicker">Tutor section</p>
+                <h1>Choose Your<br><span>Chess Tutor.</span></h1>
+                <p class="hero-copy">
+                    Tutors do more than play moves. They explain mistakes, show stronger alternatives and let you go back to improve the position.
+                </p>
+
+                <div class="feature-row">
+                    <div class="feature">
+                        <strong>All unlocked</strong>
+                        <span>Pick any character and difficulty from the start.</span>
+                    </div>
+                    <div class="feature">
+                        <strong>Best move feedback</strong>
+                        <span>Compare your move to the engine recommendation.</span>
+                    </div>
+                    <div class="feature">
+                        <strong>Tutorial mode</strong>
+                        <span>Learn the objective and how each piece moves.</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tutor-list" aria-label="Tutor list">
+                                    <!-- Each tutor card connects personality, ELO and feedback style. -->
+{% for tutor in tutors %}
+                    <a href="{% url 'tutor_game' tutor.slug %}?new=1" class="tutor-card">
+                        <div class="tutor-avatar">
+                            <img src="{% static tutor.avatar %}" alt="{{ tutor.name }}">
+                        </div>
+                        <div>
+                            <div class="tutor-name-row">
+                                <h2 class="tutor-name">{{ tutor.name }}</h2>
+                                <span class="tutor-elo">{{ tutor.elo }} ELO</span>
+                            </div>
+                            <p class="tutor-style">{{ tutor.level }} - {{ tutor.style }}</p>
+                            <p class="tutor-description">{{ tutor.description }}</p>
+                        </div>
+                        <span class="tutor-action">Start Tutor</span>
+                    </a>
+                {% endfor %}
+            </div>
+        </section>
+    </main>
+</body>
+</html>

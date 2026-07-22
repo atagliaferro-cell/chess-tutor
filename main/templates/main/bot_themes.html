@@ -1,0 +1,471 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choose Theme | Chess Tutor</title>
+    <style>
+        :root {
+            --bg: #050806;
+            --panel: rgba(5, 24, 10, 0.94);
+            --panel-soft: rgba(8, 30, 13, 0.82);
+            --text: #f3f6ef;
+            --muted: #bdc8ba;
+            --green: #52e262;
+            --green-bright: #63f06f;
+            --line: rgba(84, 255, 122, 0.16);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(99, 240, 111, 0.92) rgba(5, 24, 10, 0.82);
+        }
+
+        *::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+
+        *::-webkit-scrollbar-track {
+            background: rgba(5, 24, 10, 0.82);
+            border-radius: 999px;
+        }
+
+        *::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #63f06f, #238c3f);
+            border: 3px solid rgba(5, 24, 10, 0.82);
+            border-radius: 999px;
+        }
+
+        *::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #83ff8d, #31ba53);
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 70% 18%, rgba(58, 220, 88, 0.2), transparent 34%),
+                radial-gradient(circle at 18% 76%, rgba(58, 220, 88, 0.09), transparent 32%),
+                #050806;
+            color: var(--text);
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .theme-page {
+            height: 100vh;
+            overflow: hidden;
+            padding: 18px 42px 18px;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(84, 255, 122, 0.14);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 26px;
+            font-weight: 900;
+            color: #ffffff;
+        }
+
+        .logo-mark {
+            width: 38px;
+            height: 38px;
+            display: grid;
+            place-items: center;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #7cff82, #1f8f45);
+            color: rgba(231, 255, 226, 0.34);
+            font-size: 25px;
+            box-shadow: 0 0 28px rgba(84, 255, 122, 0.45);
+        }
+
+        .logo span {
+            color: #52e262;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 36px;
+            color: #c8d0c4;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .nav-links a {
+            position: relative;
+            padding: 8px 0;
+        }
+
+        .nav-links a:hover,
+        .nav-links .active {
+            color: #63f06f;
+        }
+
+        .nav-links .active::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -14px;
+            height: 3px;
+            background: #53e35f;
+            box-shadow: 0 0 18px rgba(83, 227, 95, 0.8);
+        }
+
+        .auth-links {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+        }
+
+        .auth-user {
+            color: #ffffff;
+            font-weight: 800;
+        }
+
+        .profile-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-avatar {
+            width: 34px;
+            height: 34px;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #7cff82, #1f8f45);
+            color: rgba(231, 255, 226, 0.34);
+            font-size: 0.82rem;
+            font-weight: 900;
+            box-shadow: 0 0 18px rgba(84, 255, 122, 0.32);
+        }
+
+        .nav-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .auth-button {
+            padding: 8px 16px;
+            border: 1px solid rgba(99, 240, 111, 0.45);
+            border-radius: 6px;
+            color: #63f06f;
+            font-weight: 800;
+            background: rgba(99, 240, 111, 0.08);
+        }
+
+        .theme-shell {
+            max-width: 1480px;
+            margin: 0 auto;
+            padding-top: 18px;
+        }
+
+        .theme-header {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 22px;
+            align-items: end;
+            margin-bottom: 16px;
+        }
+
+        .kicker {
+            margin: 0 0 8px;
+            color: var(--green-bright);
+            font-size: 0.82rem;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(2.2rem, 4.45vw, 4.55rem);
+            line-height: 0.96;
+            font-weight: 900;
+            letter-spacing: 0;
+        }
+
+        h1 span {
+            color: var(--green);
+            text-shadow: 0 0 34px rgba(82, 226, 98, 0.42);
+        }
+
+        .summary-card {
+            width: min(360px, 100%);
+            padding: 14px 16px;
+            border-radius: 8px;
+            background: linear-gradient(145deg, rgba(5, 24, 10, 0.94), rgba(2, 10, 6, 0.96));
+            border: 1px solid rgba(99, 240, 111, 0.26);
+            box-shadow: 0 0 42px rgba(82, 226, 98, 0.12);
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            color: var(--muted);
+            font-weight: 800;
+        }
+
+        .summary-row + .summary-row {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--line);
+        }
+
+        .summary-row strong {
+            color: #ffffff;
+        }
+
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .theme-card {
+            min-height: 220px;
+            display: grid;
+            grid-template-columns: 96px minmax(0, 1fr);
+            gap: 14px;
+            align-items: center;
+            padding: 14px;
+            border-radius: 8px;
+            background: linear-gradient(145deg, rgba(7, 28, 12, 0.92), rgba(2, 10, 6, 0.96));
+            border: 1px solid rgba(99, 240, 111, 0.16);
+            box-shadow: 0 20px 48px rgba(0, 0, 0, 0.28);
+            transition: 0.2s ease;
+        }
+
+        .theme-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(99, 240, 111, 0.52);
+            box-shadow: 0 0 36px rgba(82, 226, 98, 0.16);
+        }
+
+        .theme-avatar {
+            width: 96px;
+            height: 96px;
+            overflow: hidden;
+            border-radius: 8px;
+            background: #101410;
+            border: 1px solid rgba(99, 240, 111, 0.24);
+        }
+
+        .theme-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .theme-name {
+            margin: 0 0 6px;
+            font-size: 1.16rem;
+            font-weight: 900;
+        }
+
+        .theme-style {
+            margin: 0 0 10px;
+            color: var(--green-bright);
+            font-size: 0.82rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .theme-intro {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.88rem;
+            line-height: 1.34;
+            font-weight: 800;
+        }
+
+        .theme-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 12px;
+            min-height: 36px;
+            padding: 0 13px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #6df36f, #2fb84b);
+            color: #051006;
+            font-size: 0.9rem;
+            font-weight: 900;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 12px;
+            min-height: 38px;
+            padding: 0 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(99, 240, 111, 0.32);
+            color: var(--green-bright);
+            background: rgba(99, 240, 111, 0.08);
+            font-weight: 900;
+        }
+
+        @media (max-width: 1120px) {
+            body {
+                overflow: auto;
+            }
+
+            .theme-page {
+                height: auto;
+                min-height: 100vh;
+                overflow: visible;
+            }
+
+            .theme-header {
+                grid-template-columns: 1fr;
+            }
+
+            .theme-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 760px) {
+            .theme-page {
+                padding: 18px;
+            }
+
+            .navbar {
+                align-items: flex-start;
+                gap: 22px;
+                flex-direction: column;
+            }
+
+            .nav-links {
+                width: 100%;
+                gap: 18px;
+                overflow-x: auto;
+                padding-bottom: 4px;
+            }
+
+            .theme-grid,
+            .theme-card {
+                grid-template-columns: 1fr;
+            }
+        }
+
+
+        /* Keep the site mark consistent across every page. */
+        .logo-mark,
+        .brand-mark {
+            color: rgba(231, 255, 226, 0.34) !important;
+            text-shadow: 0 0 10px rgba(240, 255, 236, 0.18);
+        }
+
+        .nav-avatar {
+            color: #061107;
+        }
+    </style>
+</head>
+<body>
+    <main class="theme-page">
+        <nav class="navbar">
+            <a href="{% url 'home' %}" class="logo">
+                <span class="logo-mark">♞</span>
+                Chess <span>Tutor</span>
+            </a>
+
+            <div class="nav-links">
+                <a href="{% url 'play' %}" class="active">Play</a>
+                <a href="{% url 'tutors' %}">Tutors</a>
+                <a href="{% url 'puzzles' %}">Puzzles</a>
+                <a href="{% url 'dashboard' %}">Dashboard</a>
+            </div>
+
+            <div class="auth-links">
+                <span class="profile-link">
+                    <span class="nav-avatar">
+                        {% if account_profile.avatar %}
+                            <img src="{{ account_profile.avatar.url }}" alt="{{ request.user.username }} profile picture">
+                        {% else %}
+                            {{ request.user.username|slice:":2"|upper }}
+                        {% endif %}
+                    </span>
+                    <span class="auth-user">{{ request.user.username }}</span>
+                </span>
+                <a href="{% url 'account_settings' %}" class="auth-button">Settings</a>
+            </div>
+        </nav>
+
+        <section class="theme-shell">
+            <div class="theme-header">
+                <div>
+                    <p class="kicker">Choose Theme</p>
+                    <h1>{{ bot.name }}<br><span>{{ bot.elo }} ELO</span></h1>
+                </div>
+
+                <div class="summary-card">
+                    <div class="summary-row">
+                        <span>Player ELO</span>
+                        <strong>{{ player_elo }}</strong>
+                    </div>
+                    <div class="summary-row">
+                        <span>Win sets ELO</span>
+                        <strong>{{ bot.elo }}</strong>
+                    </div>
+                    <div class="summary-row">
+                        <span>Progress</span>
+                        <strong>{{ bots_defeated }}/{{ total_bots }}</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="theme-grid">
+                {% for theme in themes %}
+                    <a href="{% url 'bot_game' bot.slug theme.slug %}?new=1" class="theme-card">
+                        <div class="theme-avatar">
+                            <img src="{% static theme.avatar %}" alt="{{ theme.name }}">
+                        </div>
+                        <div>
+                            <h2 class="theme-name">{{ theme.name }}</h2>
+                            <p class="theme-style">{{ theme.style }}</p>
+                            <p class="theme-intro">{{ theme.intro }}</p>
+                            <span class="theme-action">Play Theme</span>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+
+            <a href="{% url 'play' %}" class="back-link">Back to Bot Ladder</a>
+        </section>
+    </main>
+</body>
+</html>

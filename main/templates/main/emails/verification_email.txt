@@ -1,0 +1,11 @@
+Hi {{ user.username }},
+
+Welcome to Chess Tutor.
+
+Click the link below to verify your email address and activate your account:
+
+{{ verification_url }}
+
+If you did not create this account, you can ignore this email.
+
+Chess Tutor
