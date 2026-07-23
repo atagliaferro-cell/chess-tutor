@@ -26,13 +26,13 @@ SECRET_KEY = os.getenv("SECRET_KEY", "temporary-development-key")
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
 ALLOWED_HOSTS = [
-    "chess-tutor.onrender.com",
+    "chess-tutor-dxct.onrender.com",
     "localhost",
     "127.0.0.1",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://chess-tutor.onrender.com",
+    "https://chess-tutor-dxct.onrender.com",
 ]
 
 
